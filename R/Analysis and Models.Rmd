@@ -1,0 +1,249 @@
+---
+title: "Data Analysis and Shitty Meta-A Models???"
+author: "Lauren Harrison"
+date: "28/02/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Load packages
+```{r}
+install.packages("pacman")
+pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools)
+```
+
+# 2. Load datasets
+```{r}
+pers <- read.csv("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Good Datasets/pers_data.csv")
+head(pers)
+bodysize <- read.csv("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Good Datasets/bodysize_SSD.csv")
+head(bodysize)
+```
+
+# 3. Fix "pers" dataset before we get started
+```{r}
+# remove whitespace
+spp_names <- trimws(c(as.character(pers$species_name),
+                      as.character(bodysize$species_name), 
+                      which = "both"))
+
+# merge spp_names columns
+pers <- merge(pers,bodysize,by="species_name")
+summary(pers)
+
+# just select the relevant columns for now to make life easier
+pers_new <- pers %>% select(study_ID, year, species_name, taxo_group.x, personality_trait, male_n, 
+                                  male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend)
+
+```
+
+
+# 4. Calculate effect sizes (SMD, lnRR and lnCVR)
+On whole dataset? 
+```{r}
+# calculating effect sizes
+
+# SMD (Hedge's g)
+smd <- escalc(measure = "SMD", 
+              n1i = pers_new$male_n, n2i = pers_new$female_n,
+              m1i = pers_new$male_mean, m2i = pers_new$female_mean,
+              sd1i = pers_new$m_SE_to_SD, sd2i = pers_new$f_SE_to_SD)
+
+# lnCVR
+lncvr <- escalc(data = pers_new, measure = "CVR",
+                     n2i = pers_new$female_n, n1i = pers_new$male_n,
+                     m2i = pers_new$female_mean, m1i = pers_new$male_mean,
+                     sd2i = pers_new$f_SE_to_SD, sd1i = pers_new$m_SE_to_SD)
+# lnRR
+lnrr <- escalc(data = pers_new, measure = "ROM",
+                   n2i = pers_new$female_n, n1i = pers_new$male_n,
+                   m2i = pers_new$female_mean, m1i = pers_new$male_mean,
+                   sd2i = pers_new$f_SE_to_SD, sd1i = pers_new$m_SE_to_SD)
+# effect sizes all
+ef <- data.frame(CVR = lncvr$yi, VCR = lncvr$vi,
+                 RR = lnrr$yi, VRR = lnrr$vi,
+                 SMD_ef = smd$yi, SMD_var = smd$vi)
+
+# add yi and vi back into dataset
+pers_edit <- bind_cols(pers_new, ef)
+
+summary(pers_edit)
+```
+
+# plot effect sizes to see how they look
+```{r}
+# lnCVR
+plot <- forest(pers_edit$CVR, pers_edit$VCR)
+# just first 25
+
+forest(pers_edit$CVR[1:25], pers_edit$VCR[1:25])
+```
+```{r}
+# lnRR
+forest(pers_edit$RR[1:25], pers_edit$VRR[1:25])
+```
+
+```{r}
+#SMD
+forest(pers_edit$SMD_ef[1:25], pers_edit$SMD_var[1:25])
+```
+
+### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
+1. Need to transform proportions to logits, then to Hedge's g?
+2. Scores - cut them out?
+3. Flip signs where indicated 
+
+######
+
+# 5. models
+Let's run the first bunch of models on the whole dataset: pers_edit to see what kinds of variance we have in the dataset
+```{r}
+# common-effect model
+  # only use this model when you assume there is no variation between studies in how experiments were conducted, not suitable for high heterogeneity or low sample sizes. Therefore we will NOT use this model because we know that there are differences between studies that we aren't accounting for.
+
+# random effect model
+  # a better fit for our data because we have a lot of different species, multiple effect sizes within a single study, and high heterogeneity.
+
+# model 1 - SMD random effect model
+random_m1 <- rma(yi = SMD_ef, vi = SMD_var, method = "REML", data = pers_edit) #takes a few minutes to run
+summary(random_m1) #74.22% I2 score indicates high heterogeneity
+```
+```{r}
+# model 2 - lnRR random effect model
+random_m2 <- rma(yi = RR, vi = VRR, method = "REML", data = pers_edit) 
+    #error when running model - division by zero when computing inverse weights?
+summary(random_m2) # ERROR
+
+# Note on error message:
+  # Wolfgang says that you will get this error message when there are 0s present in the means or variances in effect sizes. Usually this is when you remove those datapoints, but for our dataset, this is interesting to look at. Work around?
+
+# model 3 - lnCVR random effect model
+random_m3 <- rma(yi = CVR, vi = VCR, method = "REML", data = pers_edit) 
+    # UPDATED DATASET RUNS NOW
+summary(random_m3) #I^2 = 55.17%, significant heterogeneity?
+
+# Error solutions?:
+  # let's try to flip signs to make everything positive, change directionality before running the model (only works for lnRR though)
+  # go through dataset to find obvious errors
+```
+
+# 6. Partition dataset into the "big 5" personality traits for each taxonomic group (25 different dataframes)
+
+NOTE: Can probably figure out how to do this in a for loop because copying and pasting code is soooo tedious
+```{r}
+#1. birds
+birds <- subset(pers_new, pers_new$taxo_group=="bird")
+
+  # boldness
+birds_bold <- subset(birds, birds$personality_trait=="boldness")
+
+  # aggression
+birds_aggr <- subset(birds, birds$personality_trait=="aggression")
+
+  # activity
+birds_act <- subset(birds, birds$personality_trait=="activity")
+
+  # exploration
+birds_exp <- subset(birds, birds$personality_trait=="exploration")
+
+  # sociality
+birds_social <- subset(birds, birds$personality_trait=="sociality")
+###################
+#2. mammals
+mammal <- subset(pers_new, pers_new$taxo_group=="mammal")
+
+  # boldness
+mam_bold <- subset(mammal, mammal$personality_trait=="boldness")
+
+  # aggression
+mam_aggr <- subset(mammal, mammal$personality_trait=="aggression")
+
+  # activity
+mam_act <- subset(mammal, mammal$personality_trait=="activity")
+
+  # exploration
+mam_exp <- subset(mammal, mammal$personality_trait=="exploration")
+
+  # sociality
+mam_social <- subset(mammal, mammal$personality_trait=="sociality")
+######################
+#3. fish
+fish <- subset(pers_new, pers_new$taxo_group=="fish")
+
+ # boldness
+fish_bold <- subset(fish, fish$personality_trait=="boldness")
+
+  # aggression
+fish_aggr <- subset(fish, fish$personality_trait=="aggression")
+
+  # activity
+fish_act <- subset(fish, fish$personality_trait=="activity")
+
+  # exploration
+fish_exp <- subset(fish, fish$personality_trait=="exploration")
+
+  # sociality
+fish_social <- subset(fish, fish$personality_trait=="sociality")
+######################
+#4. reptiles
+rep <- subset(pers_new, pers_new$taxo_group=="reptilia")
+
+ # boldness
+rep_bold <- subset(rep, rep$personality_trait=="boldness")
+
+  # aggression
+rep_aggr <- subset(rep, rep$personality_trait=="aggression")
+
+  # activity
+rep_act <- subset(rep, rep$personality_trait=="activity")
+
+  # exploration
+rep_exp <- subset(rep, rep$personality_trait=="exploration")
+
+  # sociality
+rep_social <- subset(rep, rep$personality_trait=="sociality")
+######################
+#5. inverts
+invert <- subset(pers_new, pers_new$taxo_group=="invertebrate")
+
+ # boldness
+inv_bold <- subset(invert, invert$personality_trait=="boldness")
+
+  # aggression
+inv_aggr <- subset(invert, invert$personality_trait=="aggression")
+
+  # activity
+inv_act <- subset(invert, invert$personality_trait=="activity")
+
+  # exploration
+inv_exp <- subset(invert, invert$personality_trait=="exploration")
+
+  # sociality
+inv_social <- subset(invert, invert$personality_trait=="sociality")
+```
+
+# 7. Run random effects models for each of the personality traits separately, and for each of the taxonomic groups?
+
+# 8. Phylogenetic trees
+Tree for all the species together seems to be missing some species that aren't missing when the tree is made specifically for each taxonomic group... Use these taxa-specific trees instead?
+
+```{r}
+# trees
+
+# bird tree
+bird_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/bird_species.nwk")
+plot(bird_tree)
+
+mammal_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/mammal_species.nwk")
+
+rep_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/reptile_species.nwk")
+
+fish_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/fish_species.nwk")
+
+invert_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/invert_species.nwk")
+
+```
+
