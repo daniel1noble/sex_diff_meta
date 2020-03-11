@@ -12,14 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 # 1. Load packages
 ```{r}
 install.packages("pacman")
-pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools)
+pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally)
 ```
 
 # 2. Load datasets
 ```{r}
-pers <- read.csv("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Good Datasets/pers_data.csv")
+pers <- read.csv("./data/pers_data.csv")
 head(pers)
-bodysize <- read.csv("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Good Datasets/bodysize_SSD.csv")
+bodysize <- read.csv("./data/bodysize_SSD.csv")
 head(bodysize)
 ```
 
@@ -35,9 +35,32 @@ pers <- merge(pers,bodysize,by="species_name")
 summary(pers)
 
 # just select the relevant columns for now to make life easier
-pers_new <- pers %>% select(study_ID, year, species_name, taxo_group.x, personality_trait, male_n, 
-                                  male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend)
+pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group.x, measurement, data_type, personality_trait, male_n, 
+                                  male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
+summary(pers_new)
+ggpairs(pers_new, columns = 6:11)
 
+# Check out some outliers
+pers_new %>%
+filter(is.na(SSD_index))
+
+# Check species numbers
+pers_new %>%
+group_by(taxo_group.x) %>%
+summarise(species = length(unique(species_name)))
+
+# Rename spp
+pers_new <- pers_new %>% 
+            mutate(spp = gsub(" ", "_", species_name))
+
+pers_new %>%
+group_by(taxo_group.x, personality_trait, parental_care) %>%
+summarise(studies = length(unique(study_ID)), effects = n())
+
+# Add in observation level random effect
+  pers_new <- pers_new %>% 
+            group_by(taxo_group.x)
+            mutate(err = 1:length())
 ```
 
 
@@ -47,56 +70,73 @@ On whole dataset?
 # calculating effect sizes
 
 # SMD (Hedge's g)
-smd <- escalc(measure = "SMD", 
-              n1i = pers_new$male_n, n2i = pers_new$female_n,
-              m1i = pers_new$male_mean, m2i = pers_new$female_mean,
-              sd1i = pers_new$m_SE_to_SD, sd2i = pers_new$f_SE_to_SD)
+pers_new <- escalc(measure = "SMD", 
+              n1i = male_n, n2i = female_n,
+              m1i = male_mean, m2i = female_mean,
+              sd1i = m_SE_to_SD, sd2i = f_SE_to_SD, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
 
 # lnCVR
-lncvr <- escalc(data = pers_new, measure = "CVR",
-                     n2i = pers_new$female_n, n1i = pers_new$male_n,
-                     m2i = pers_new$female_mean, m1i = pers_new$male_mean,
-                     sd2i = pers_new$f_SE_to_SD, sd1i = pers_new$m_SE_to_SD)
-# lnRR
-lnrr <- escalc(data = pers_new, measure = "ROM",
-                   n2i = pers_new$female_n, n1i = pers_new$male_n,
-                   m2i = pers_new$female_mean, m1i = pers_new$male_mean,
-                   sd2i = pers_new$f_SE_to_SD, sd1i = pers_new$m_SE_to_SD)
-# effect sizes all
-ef <- data.frame(CVR = lncvr$yi, VCR = lncvr$vi,
-                 RR = lnrr$yi, VRR = lnrr$vi,
-                 SMD_ef = smd$yi, SMD_var = smd$vi)
+pers_new <- escalc(measure = "CVR",
+                     n2i = female_n, n1i = male_n,
+                     m2i = female_mean, m1i = male_mean,
+                     sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
 
-# add yi and vi back into dataset
-pers_edit <- bind_cols(pers_new, ef)
-
-summary(pers_edit)
+# Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
+pers_new %>%
+filter(is.na(CVR_yi))
 ```
 
 # plot effect sizes to see how they look
 ```{r}
 # lnCVR
-plot <- forest(pers_edit$CVR, pers_edit$VCR)
-# just first 25
+hist(pers_new$CVR_yi)
+funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv")
 
-forest(pers_edit$CVR[1:25], pers_edit$VCR[1:25])
-```
-```{r}
-# lnRR
-forest(pers_edit$RR[1:25], pers_edit$VRR[1:25])
-```
-
-```{r}
 #SMD
-forest(pers_edit$SMD_ef[1:25], pers_edit$SMD_var[1:25])
+hist(pers_new$SMD_yi)
+funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+
+# Effect sizes 3 and above
+pers_new %>%
+filter(SMD_yi > 3)
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
-1. Need to transform proportions to logits, then to Hedge's g?
+1. Need to transform proportions to logits, then to Hedge's g? 
 2. Scores - cut them out?
+# Sensitivity analysis to see if proportion or score data make a difference to conclusions if you cut them out.
 3. Flip signs where indicated 
+# Yes!
 
-######
+# Lets flip signs of effects for SMD
+   pers_new$directionality <- ifelse(is.na(pers_new$directionality), 0, 1)
+
+   pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
+
+# Prepare the phylogenic trees
+    tree_files <- paste0("./trees/",list.files("./trees"))
+
+    trees <- lapply(tree_files, function(x) read.tree(x))
+    names(trees) <- list.files("./trees")
+
+    par(mfrow = c(1,5), mar = c(1,1,1,1))
+    lapply(trees, function(x) plot(x, cex = 1))
+
+    lapply(trees, function(x) is.ultrametric(x))
+
+    phylo_vcv <- lapply(trees, function(x) vcv(x, corr = TRUE))
+
+
+meta_model_fits <- function(data, phyloVCV_list, formula){
+        taxa_list <- split(pers_new, pers_new$taxo_group.x)
+
+
+        for(i in 1:length(taxa_list)){
+          lnCVR <- metafor::rma.mv(CVR_yi ~ as.formula(formula), V = yi, random = list(~1|study_ID, ~1|species_name, ) )
+
+        }
+} 
+
 
 # 5. models
 Let's run the first bunch of models on the whole dataset: pers_edit to see what kinds of variance we have in the dataset
