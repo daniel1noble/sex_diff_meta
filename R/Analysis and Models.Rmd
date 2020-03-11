@@ -12,7 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 # 1. Load packages
 ```{r}
 install.packages("pacman")
-pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally)
+pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools)
+
+devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE)
+
+source("./R/func.R")
 ```
 
 # 2. Load datasets
@@ -59,8 +63,8 @@ summarise(studies = length(unique(study_ID)), effects = n())
 
 # Add in observation level random effect
   pers_new <- pers_new %>% 
-            group_by(taxo_group.x)
-            mutate(err = 1:length())
+            group_by(taxo_group.x) %>% 
+            mutate(err = 1:length( study_ID))
 ```
 
 
@@ -126,18 +130,6 @@ filter(SMD_yi > 3)
 
     phylo_vcv <- lapply(trees, function(x) vcv(x, corr = TRUE))
 
-
-meta_model_fits <- function(data, phyloVCV_list, formula){
-        taxa_list <- split(pers_new, pers_new$taxo_group.x)
-
-
-        for(i in 1:length(taxa_list)){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ as.formula(formula), V = yi, random = list(~1|study_ID, ~1|species_name, ) )
-
-        }
-} 
-
-
 # 5. models
 Let's run the first bunch of models on the whole dataset: pers_edit to see what kinds of variance we have in the dataset
 ```{r}
@@ -147,9 +139,29 @@ Let's run the first bunch of models on the whole dataset: pers_edit to see what 
 # random effect model
   # a better fit for our data because we have a lot of different species, multiple effect sizes within a single study, and high heterogeneity.
 
-# model 1 - SMD random effect model
-random_m1 <- rma(yi = SMD_ef, vi = SMD_var, method = "REML", data = pers_edit) #takes a few minutes to run
-summary(random_m1) #74.22% I2 score indicates high heterogeneity
+# Now we can fit some models. First our MLMA intercept only models, across each taxa
+
+  MLMA_models <- meta_model_fits(pers_new)
+
+# View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. I would probably drop reptilia because, well there are only 2 species even if there are 15 effect sizes. You can't estimate many of the variance parameters
+
+  MLMA_models
+
+# Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. Because the MLMA models object is a list of lists (awkward, I know), lapply won't easily apply here, so we'll just for loop things
+
+MLMA_estimates <- c()
+      orchards <- list()
+
+for(i in 1:length(MLMA_models)){
+      for(j in 1:2){
+        name <- paste0(names(MLMA_models)[i], "_", names(MLMA_models[[i]])[j])
+        orchards[[name]] <- mod_results(MLMA_models[[i]][[j]], mod="Int")
+        est <- mod_results(MLMA_models[[i]][[j]], mod="Int")$mod_table
+        MLMA_estimates <- rbind(MLMA_estimates, cbind(est, name))
+      }
+}
+
+
 ```
 ```{r}
 # model 2 - lnRR random effect model
