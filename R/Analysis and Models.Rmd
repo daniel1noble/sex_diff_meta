@@ -1,5 +1,5 @@
 ---
-title: "Data Analysis and Shitty Meta-A Models???"
+title: "Data Analysis and Meta-A Models"
 author: "Lauren Harrison"
 date: "28/02/2020"
 output: html_document
@@ -11,12 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Load packages
 ```{r}
-install.packages("pacman")
-pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools)
+# Install CRAN packages
+  install.packages("pacman")
+  pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta)
 
-devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE)
+# Install orchard plot package
+  devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE)
 
-source("./R/func.R")
+# Source our own functions
+  source("./R/func.R")
 ```
 
 # 2. Load datasets
@@ -30,36 +33,36 @@ head(bodysize)
 # 3. Fix "pers" dataset before we get started
 ```{r}
 # remove whitespace
-spp_names <- trimws(c(as.character(pers$species_name),
-                      as.character(bodysize$species_name), 
-                      which = "both"))
+  spp_names <- trimws(c(as.character(pers$species_name),
+                        as.character(bodysize$species_name), 
+                        which = "both"))
 
 # merge spp_names columns
-pers <- merge(pers,bodysize,by="species_name")
-summary(pers)
+  pers <- merge(pers,bodysize,by="species_name")
+  summary(pers)
 
-# just select the relevant columns for now to make life easier
-pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group.x, measurement, data_type, personality_trait, male_n, 
-                                  male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
-summary(pers_new)
-ggpairs(pers_new, columns = 6:11)
+# Just select the relevant columns for now to make life easier
+  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group.x, measurement, data_type, personality_trait, male_n, 
+                                    male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
+  summary(pers_new)
+  ggpairs(pers_new, columns = 6:11)
 
 # Check out some outliers
-pers_new %>%
-filter(is.na(SSD_index))
+  pers_new %>%
+  filter(is.na(SSD_index))
 
 # Check species numbers
-pers_new %>%
-group_by(taxo_group.x) %>%
-summarise(species = length(unique(species_name)))
+  pers_new %>%
+  group_by(taxo_group.x) %>%
+  summarise(species = length(unique(species_name)))
 
 # Rename spp
-pers_new <- pers_new %>% 
-            mutate(spp = gsub(" ", "_", species_name))
+  pers_new <- pers_new %>% 
+              mutate(spp = gsub(" ", "_", species_name))
 
-pers_new %>%
-group_by(taxo_group.x, personality_trait, parental_care) %>%
-summarise(studies = length(unique(study_ID)), effects = n())
+  pers_new %>%
+  group_by(taxo_group.x, personality_trait, parental_care) %>%
+  summarise(studies = length(unique(study_ID)), effects = n())
 
 # Add in observation level random effect
   pers_new <- pers_new %>% 
@@ -67,42 +70,40 @@ summarise(studies = length(unique(study_ID)), effects = n())
             mutate(err = 1:length( study_ID))
 ```
 
-
-# 4. Calculate effect sizes (SMD, lnRR and lnCVR)
-On whole dataset? 
+# 4. Calculate effect sizes (SMD and lnCVR)
 ```{r}
 # calculating effect sizes
 
 # SMD (Hedge's g)
-pers_new <- escalc(measure = "SMD", 
-              n1i = male_n, n2i = female_n,
-              m1i = male_mean, m2i = female_mean,
-              sd1i = m_SE_to_SD, sd2i = f_SE_to_SD, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
+  pers_new <- escalc(measure = "SMD", 
+                n1i = male_n, n2i = female_n,
+                m1i = male_mean, m2i = female_mean,
+                sd1i = m_SE_to_SD, sd2i = f_SE_to_SD, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
 
 # lnCVR
-pers_new <- escalc(measure = "CVR",
-                     n2i = female_n, n1i = male_n,
-                     m2i = female_mean, m1i = male_mean,
-                     sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
+  pers_new <- escalc(measure = "CVR",
+                       n2i = female_n, n1i = male_n,
+                       m2i = female_mean, m1i = male_mean,
+                       sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
 
 # Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
-pers_new %>%
-filter(is.na(CVR_yi))
+  pers_new %>%
+  filter(is.na(CVR_yi))
 ```
 
-# plot effect sizes to see how they look
+# Plot effect sizes to see how they look
 ```{r}
 # lnCVR
-hist(pers_new$CVR_yi)
-funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv")
+  hist(pers_new$CVR_yi)
+  funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv")
 
 #SMD
-hist(pers_new$SMD_yi)
-funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+  hist(pers_new$SMD_yi)
+  funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
 
 # Effect sizes 3 and above
-pers_new %>%
-filter(SMD_yi > 3)
+  pers_new %>%
+  filter(SMD_yi > 3)
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
@@ -113,12 +114,18 @@ filter(SMD_yi > 3)
 # Yes!
 
 # Lets flip signs of effects for SMD
+The directional meaning of effect sizes vary depending on the specific units and trait being measured. The data has a directionality column that tells one if the meaning should be reversed (1) or left the same. 
+
+```{r}
    pers_new$directionality <- ifelse(is.na(pers_new$directionality), 0, 1)
 
-   pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
-
+      pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
+```
 # Prepare the phylogenic trees
-    tree_files <- paste0("./trees/",list.files("./trees"))
+For each taxonomic group the phylogenetic trees have been constructed. We'll use these trees for multi-level meta-analytic models throughout. 
+
+```{r}
+    tree_files <- paste0("./trees/", list.files("./trees"))
 
     trees <- lapply(tree_files, function(x) read.tree(x))
     names(trees) <- list.files("./trees")
@@ -129,153 +136,33 @@ filter(SMD_yi > 3)
     lapply(trees, function(x) is.ultrametric(x))
 
     phylo_vcv <- lapply(trees, function(x) vcv(x, corr = TRUE))
+```
 
 # 5. models
-Let's run the first bunch of models on the whole dataset: pers_edit to see what kinds of variance we have in the dataset
+Let's run the first bunch of models on the whole dataset. We'll start off with intercept only multi-level meta-analytic models, then move to multi-level meta-regression models. The functions in `func.R` should be consulted to see precisely what models are being fit across the taxonomic groups
+
 ```{r}
-# common-effect model
-  # only use this model when you assume there is no variation between studies in how experiments were conducted, not suitable for high heterogeneity or low sample sizes. Therefore we will NOT use this model because we know that there are differences between studies that we aren't accounting for.
-
-# random effect model
-  # a better fit for our data because we have a lot of different species, multiple effect sizes within a single study, and high heterogeneity.
-
 # Now we can fit some models. First our MLMA intercept only models, across each taxa
 
-  MLMA_models <- meta_model_fits(pers_new)
+  MLMA_models <- meta_model_fits(pers_new, type = "int")
 
 # View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. I would probably drop reptilia because, well there are only 2 species even if there are 15 effect sizes. You can't estimate many of the variance parameters
 
   MLMA_models
 
-# Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. Because the MLMA models object is a list of lists (awkward, I know), lapply won't easily apply here, so we'll just for loop things
+# Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. 
 
-MLMA_estimates <- c()
-      orchards <- list()
+  MLMA_estimates <- lapply(MLMA_models, function(x) lapply(x, function(c) mod_results(c, mod = "Int")))
 
-for(i in 1:length(MLMA_models)){
-      for(j in 1:2){
-        name <- paste0(names(MLMA_models)[i], "_", names(MLMA_models[[i]])[j])
-        orchards[[name]] <- mod_results(MLMA_models[[i]][[j]], mod="Int")
-        est <- mod_results(MLMA_models[[i]][[j]], mod="Int")$mod_table
-        MLMA_estimates <- rbind(MLMA_estimates, cbind(est, name))
-      }
-}
+  mod_result_table <- plyr::ldply(do.call("rbind", lapply(MLMA_estimates, function(x) lapply(x, function(c) print(c)))))
+
+# We can also extract I2 estimates, or estimates of heterogeneity from these models using the I2 function in metaAidR
 
 
-```
-```{r}
-# model 2 - lnRR random effect model
-random_m2 <- rma(yi = RR, vi = VRR, method = "REML", data = pers_edit) 
-    #error when running model - division by zero when computing inverse weights?
-summary(random_m2) # ERROR
-
-# Note on error message:
-  # Wolfgang says that you will get this error message when there are 0s present in the means or variances in effect sizes. Usually this is when you remove those datapoints, but for our dataset, this is interesting to look at. Work around?
-
-# model 3 - lnCVR random effect model
-random_m3 <- rma(yi = CVR, vi = VCR, method = "REML", data = pers_edit) 
-    # UPDATED DATASET RUNS NOW
-summary(random_m3) #I^2 = 55.17%, significant heterogeneity?
-
-# Error solutions?:
-  # let's try to flip signs to make everything positive, change directionality before running the model (only works for lnRR though)
-  # go through dataset to find obvious errors
 ```
 
 # 6. Partition dataset into the "big 5" personality traits for each taxonomic group (25 different dataframes)
 
-NOTE: Can probably figure out how to do this in a for loop because copying and pasting code is soooo tedious
-```{r}
-#1. birds
-birds <- subset(pers_new, pers_new$taxo_group=="bird")
-
-  # boldness
-birds_bold <- subset(birds, birds$personality_trait=="boldness")
-
-  # aggression
-birds_aggr <- subset(birds, birds$personality_trait=="aggression")
-
-  # activity
-birds_act <- subset(birds, birds$personality_trait=="activity")
-
-  # exploration
-birds_exp <- subset(birds, birds$personality_trait=="exploration")
-
-  # sociality
-birds_social <- subset(birds, birds$personality_trait=="sociality")
-###################
-#2. mammals
-mammal <- subset(pers_new, pers_new$taxo_group=="mammal")
-
-  # boldness
-mam_bold <- subset(mammal, mammal$personality_trait=="boldness")
-
-  # aggression
-mam_aggr <- subset(mammal, mammal$personality_trait=="aggression")
-
-  # activity
-mam_act <- subset(mammal, mammal$personality_trait=="activity")
-
-  # exploration
-mam_exp <- subset(mammal, mammal$personality_trait=="exploration")
-
-  # sociality
-mam_social <- subset(mammal, mammal$personality_trait=="sociality")
-######################
-#3. fish
-fish <- subset(pers_new, pers_new$taxo_group=="fish")
-
- # boldness
-fish_bold <- subset(fish, fish$personality_trait=="boldness")
-
-  # aggression
-fish_aggr <- subset(fish, fish$personality_trait=="aggression")
-
-  # activity
-fish_act <- subset(fish, fish$personality_trait=="activity")
-
-  # exploration
-fish_exp <- subset(fish, fish$personality_trait=="exploration")
-
-  # sociality
-fish_social <- subset(fish, fish$personality_trait=="sociality")
-######################
-#4. reptiles
-rep <- subset(pers_new, pers_new$taxo_group=="reptilia")
-
- # boldness
-rep_bold <- subset(rep, rep$personality_trait=="boldness")
-
-  # aggression
-rep_aggr <- subset(rep, rep$personality_trait=="aggression")
-
-  # activity
-rep_act <- subset(rep, rep$personality_trait=="activity")
-
-  # exploration
-rep_exp <- subset(rep, rep$personality_trait=="exploration")
-
-  # sociality
-rep_social <- subset(rep, rep$personality_trait=="sociality")
-######################
-#5. inverts
-invert <- subset(pers_new, pers_new$taxo_group=="invertebrate")
-
- # boldness
-inv_bold <- subset(invert, invert$personality_trait=="boldness")
-
-  # aggression
-inv_aggr <- subset(invert, invert$personality_trait=="aggression")
-
-  # activity
-inv_act <- subset(invert, invert$personality_trait=="activity")
-
-  # exploration
-inv_exp <- subset(invert, invert$personality_trait=="exploration")
-
-  # sociality
-inv_social <- subset(invert, invert$personality_trait=="sociality")
-```
 
 # 7. Run random effects models for each of the personality traits separately, and for each of the taxonomic groups?
 
