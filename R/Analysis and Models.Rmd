@@ -16,7 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
   pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta)
 
 # Install orchard plot package
-  devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE)
+  devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE); library(orchaRd)
+  devtools::install_github("daniel1noble/metaAidR"); library(metaAidR)
 
 # Source our own functions
   source("./R/func.R")
@@ -46,8 +47,6 @@ head(bodysize)
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group.x, measurement, data_type, personality_trait, male_n, 
                                     male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
-  summary(pers_new)
-  ggpairs(pers_new, columns = 6:11)
 
 # Check out some outliers
   pers_new %>%
@@ -62,14 +61,15 @@ head(bodysize)
   pers_new <- pers_new %>% 
               mutate(spp = gsub(" ", "_", species_name))
 
-  pers_new %>%
+  data.frame(pers_new %>% 
+  filter(!is.na(parental_care)) %>%
   group_by(taxo_group.x, personality_trait, parental_care) %>%
-  summarise(studies = length(unique(study_ID)), effects = n())
+  summarise(studies = length(unique(study_ID)), effects = n()))
 
 # Add in observation level random effect
   pers_new <- pers_new %>% 
             group_by(taxo_group.x) %>% 
-            mutate(err = 1:length( study_ID))
+            mutate(obs = 1:length( study_ID))
 ```
 
 # 4. Calculate effect sizes (SMD and lnCVR)
@@ -97,7 +97,7 @@ head(bodysize)
 ```{r}
 # lnCVR
   hist(pers_new$CVR_yi)
-  funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv")
+  funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
 
 #SMD
   hist(pers_new$SMD_yi)
@@ -127,7 +127,7 @@ The directional meaning of effect sizes vary depending on the specific units and
 For each taxonomic group the phylogenetic trees have been constructed. We'll use these trees for multi-level meta-analytic models throughout. 
 
 ```{r}
-    tree_files <- paste0("./trees/", list.files("./trees"))
+    tree_files <- paste0("./trees/", list.files("./trees"))[-1]
 
     trees <- lapply(tree_files, function(x) read.tree(x))
     names(trees) <- list.files("./trees")
@@ -148,9 +148,16 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 
   MLMA_models <- meta_model_fits(pers_new, type = "int")
 
-# View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. I would probably drop reptilia because, well there are only 2 species even if there are 15 effect sizes. You can't estimate many of the variance parameters
+# View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. We can also get from these models estimates of heterogeneity from our models. Here we need the sampling variance vector and also the models for SMD and CVR. We can then use multivariate apply (mapply) across these lists
 
-  MLMA_models
+  split_taxa <- split(pers_new, pers_new$taxo_group.x)
+    smd_mods <- lapply(MLMA_models, function(x) x$SMD)
+  lnCVR_mods <- lapply(MLMA_models, function(x) x$lnCVR)
+
+  I2_SMD <- mapply(function(x,y) I2(x, v = y$SMD_vi), x = smd_mods, y = split_taxa) # Should work, but you must remove NAs from data first
+  do.call("cbind", I2_SMD[,"bird"])
+  I2_CVR <- mapply(function(x,y) I2(x, v = y$lnCVR_vi), x = lnCVR_mods, y = split_taxa) # Should work, but you must remove NAs from data first
+  do.call("cbind", I2_CVR[,"bird"])
 
 # Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. 
 
