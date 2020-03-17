@@ -54,7 +54,7 @@ fit_MLMA_reg_models_parental_care  <- function(data){
 
 # This function takes the dataset, splits the dataset up by broad taxonomic group and applies a specified meta-analytic or meta-regression model to each taxa, saving the model results into a list that can be used down stream
 meta_model_fits <- function(data, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care")){
-         taxa_list <- split(pers_new, pers_new$taxo_group.x)
+         taxa_list <- split(pers_new, pers_new$taxo_group)
 
       tyep <-  match.arg(type)
 

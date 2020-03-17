@@ -40,13 +40,14 @@ head(bodysize)
                         which = "both"))
 
 # merge spp_names columns
-  pers <- merge(pers,bodysize,by="species_name", all.x=TRUE)
+  pers <- merge(pers,bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],by="species_name", all.x=TRUE,  no.dups = TRUE)
   summary(pers)
   nrow(pers) #
 
+#colnames(pers) <- gsub(".[xy]", "", colnames(pers))
+
 # Just select the relevant columns for now to make life easier
-  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group.x, measurement, data_type, personality_trait, male_n, 
-                                    male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
+  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
 
 # Check out some outliers
   pers_new %>%
@@ -63,12 +64,12 @@ head(bodysize)
 
   data.frame(pers_new %>% 
   filter(!is.na(parental_care)) %>%
-  group_by(taxo_group.x, personality_trait, parental_care) %>%
+  group_by(taxo_group, personality_trait, parental_care) %>%
   summarise(studies = length(unique(study_ID)), effects = n()))
 
 # Add in observation level random effect
   pers_new <- pers_new %>% 
-            group_by(taxo_group.x) %>% 
+            group_by(taxo_group) %>% 
             mutate(obs = 1:length( study_ID))
 ```
 
@@ -150,7 +151,7 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 
 # View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. We can also get from these models estimates of heterogeneity from our models. Here we need the sampling variance vector and also the models for SMD and CVR. We can then use multivariate apply (mapply) across these lists
 
-  split_taxa <- split(pers_new, pers_new$taxo_group.x)
+  split_taxa <- split(pers_new, pers_new$taxo_group)
     smd_mods <- lapply(MLMA_models, function(x) x$SMD)
   lnCVR_mods <- lapply(MLMA_models, function(x) x$lnCVR)
 
