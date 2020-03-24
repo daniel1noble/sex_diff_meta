@@ -42,14 +42,14 @@ head(bodysize)
                         which = "both"))
 
 # merge spp_names columns
-  pers <- merge(pers,bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],by="species_name", all.x=TRUE,  no.dups = TRUE)
+  pers <- merge(pers,bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],by="species_name", all=TRUE,  no.dups = TRUE)
   summary(pers)
   nrow(pers) #
 
 #colnames(pers) <- gsub(".[xy]", "", colnames(pers))
 
 # Just select the relevant columns for now to make life easier
-  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
+  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
 
 # Check out some outliers
   pers_new %>%
@@ -114,6 +114,14 @@ head(bodysize)
 # Effect sizes 3 and above
   pers_new %>%
   filter(SMD_yi > 3)
+  
+# checking SMD outliers
+  # P038 is correct as reported in paper, but is a proportion
+  # P029 has male SD wrong - paper says 64.4 but was recorded as 0.001 for some reason - amended in pers dataset
+  # P017 is correct
+  # P021 looks weird in paper too but is correct
+  # P136 is correct
+  # P014 is correct
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
@@ -161,7 +169,7 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
       lapply(trees, function(x) is.ultrametric(x))
 
     # Check that all names in the phylogeny are also in the data
-      taxa_data_list <- split(pers_new, pers_new$taxo_group)
+      taxa_data_list <- split(pers_new, pers_new$spp_name_phylo)
     
       tree_checks(taxa_data_list[[1]], tree_bird)
       
