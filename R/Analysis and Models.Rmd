@@ -30,10 +30,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # 2. Load datasets
 ```{r}
 pers <- read.csv("./data/pers_data.csv")
-head(pers)
-nrow(pers) # just to see how much data we started off with
 bodysize <- read.csv("./data/bodysize_SSD.csv")
-head(bodysize)
+
 ```
 
 # 3. Fix "pers" dataset before we get started
