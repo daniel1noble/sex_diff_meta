@@ -95,7 +95,7 @@ tree_checks <- function(data, tree){
         species_list1= setdiff(sort(tree$tip.label), sort(unique(data$spp_name_phylo)))
         species_list2= setdiff(sort(unique(data$spp_name_phylo)), sort(tree$tip.label) )
 
-        return(list(SpeciesNumbers = Numbers, SpeciesList_NotFound_InData_But_NotTree=species_list1, SpeciesList_NotFound_InTree_But_NotData=species_list2))
+        return(list(SpeciesNumbers = Numbers, SpeciesList_NotFound_InTree_But_NotData=species_list1, SpeciesList_NotFound_InData_But_NotTree=species_list2))
       }
 
 
