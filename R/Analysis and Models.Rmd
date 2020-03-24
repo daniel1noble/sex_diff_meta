@@ -168,11 +168,11 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
     # Check that all names in the phylogeny are also in the data
       taxa_data_list <- split(pers_new, pers_new$taxo_group)
     
-      tree_checks(taxa_data_list[[1]], tree_bird)
+      tree_checks(taxa_data_list[[1]], tree_bird, "spp_name_phylo")
       
       other_groups <- mapply(x = taxa_data_list[-1], 
                              y = trees, 
-                             function(x,y) tree_checks(x,y))
+                             function(x,y) tree_checks(x,y, "spp_name_phylo"))
 
       #Print out each taxon group
       for(i in colnames(other_groups)){

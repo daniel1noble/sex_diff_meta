@@ -82,20 +82,21 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
    return(model_fits)
 } 
 
-tree_checks <- function(data, tree){
-        # How many unqiue species exist in data and tree
+tree_checks <- function(data, tree, dataCol){
+        # How many unique species exist in data and tree
         Numbers <- matrix(nrow = 2, ncol = 1)
-        Numbers[1,1] <- length(unique(data$spp_name_phylo)) #108
-        Numbers[2,1] <- length(tree$tip.label) #109
+        Numbers[1,1] <- length(unique(data$spp_name_phylo)) 
+        Numbers[2,1] <- length(tree$tip.label) 
 
-      rownames(Numbers)<- c("Species in data:", "Species in tree:")
+        rownames(Numbers)<- c("Species in data:", "Species in tree:")
 
-        # Missing species or species not spelt correct
-        #species_list <- tree$tip.label[!tree$tip.label %in% unique(data$spp)]        
-        species_list1= setdiff(sort(tree$tip.label), sort(unique(data$spp_name_phylo)))
-        species_list2= setdiff(sort(unique(data$spp_name_phylo)), sort(tree$tip.label) )
+        # Missing species or species not spelt correct      
+        species_list1= setdiff(sort(tree$tip.label), sort(unique(data[,dataCol])))
+        species_list2= setdiff(sort(unique(data[,dataCol])), sort(tree$tip.label) )
 
-        return(list(SpeciesNumbers = data.frame(Numbers), SpeciesList_NotFound_InTree_But_NotData=species_list1, SpeciesList_NotFound_InData_But_NotTree=species_list2))
+        return(list(SpeciesNumbers = data.frame(Numbers), 
+                    Species_InTree_But_NotData=species_list1, 
+                    Species_InData_But_NotTree=species_list2))
       }
 
 
