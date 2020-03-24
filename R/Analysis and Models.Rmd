@@ -169,7 +169,7 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
       lapply(trees, function(x) is.ultrametric(x))
 
     # Check that all names in the phylogeny are also in the data
-      taxa_data_list <- split(pers_new, pers_new$spp_name_phylo)
+      taxa_data_list <- split(pers_new, pers_new$taxo_group)
     
       tree_checks(taxa_data_list[[1]], tree_bird)
       
