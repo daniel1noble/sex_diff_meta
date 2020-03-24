@@ -150,12 +150,6 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
 ```{r}
     tree_files <- paste0("./trees/", list.files("./trees"))[-1]
 
-    read_birds <- function(x){
-          tr <- read.nexus(x)
-          ave.tree <- midpoint(ls.consensus(tr))
-          return(ave.tree)
-    }
-
     # Read in bird trees (100) and take the average tree as concensus tree
        tree_bird <- read_birds(tree_files[1])
         
