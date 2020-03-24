@@ -44,7 +44,9 @@ head(bodysize)
                         which = "both"))
 
 # merge spp_names columns
-  pers <- merge(pers,bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],by="species_name", all=TRUE,  no.dups = TRUE)
+  pers <- merge(x = pers,
+                y = bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],
+                by="species_name", all.x=TRUE,  no.dups = TRUE)
   summary(pers)
   nrow(pers) #
 
