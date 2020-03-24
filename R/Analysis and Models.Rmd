@@ -95,8 +95,10 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
                        sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
 
 # Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
-  dim(pers_new %>%
-  filter(is.na(CVR_yi)))
+  spp_drop <- pers_new %>%
+  filter(is.na(CVR_yi))
+
+  as.character(unique(spp_drop$spp_name_phylo))
 
 # Exclude NAs
   pers_new <- pers_new %>%
@@ -168,19 +170,20 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
     # Check that all names in the phylogeny are also in the data
       taxa_data_list <- split(pers_new, pers_new$taxo_group)
     
-      tree_checks(taxa_data_list[[1]], tree_bird, "spp_name_phylo")
+      tree_checks(taxa_data_list[[1]], tree_bird, "spp_name_phylo", type = "checks")
       
       other_groups <- mapply(x = taxa_data_list[-1], 
                              y = trees, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo"))
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
 
-      #Print out each taxon group
+          #Print out each taxon group
       for(i in colnames(other_groups)){
             print(i)
             print(other_groups[,i] )
       }
+        prune_mammals <- tree_checks(taxa_data_list[[4]], trees[[3]], "spp_name_phylo", type = "prune")
 
-      #pruned.tree<-drop.tip(tree,tree$tip.label[-match(species, tree$tip.label)]) ; Can use this to prune trees...
+        prune_invert <- tree_checks(taxa_data_list[[3]], trees[[2]], "spp_name_phylo", type = "prune")
 
     # Extract the phylogenetic correlation matrices
       phylo_vcv_birds <- vcv(tree_bird, corr= TRUE)
