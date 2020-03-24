@@ -44,6 +44,7 @@ head(bodysize)
                         which = "both"))
 
 # merge spp_names columns
+
   pers <- merge(x = pers,
                 y = bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
@@ -173,7 +174,7 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
       lapply(trees, function(x) is.ultrametric(x))
 
     # Check that all names in the phylogeny are also in the data
-      taxa_data_list <- split(pers_new, pers_new$spp_name_phylo)
+      taxa_data_list <- split(pers_new, pers_new$taxo_group)
     
       tree_checks(taxa_data_list[[1]], tree_bird)
       
