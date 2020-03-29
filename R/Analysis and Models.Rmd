@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 2. Load datasets
 ```{r}
-pers <- read.csv("./data/pers_data.csv")
+    pers <- read.csv("./data/pers_data.csv")
 bodysize <- read.csv("./data/bodysize_SSD.csv")
 
 ```
@@ -46,17 +46,14 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
   pers <- merge(x = pers,
                 y = bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
-  summary(pers)
-  nrow(pers) #
-
-#colnames(pers) <- gsub(".[xy]", "", colnames(pers))
 
 # Just select the relevant columns for now to make life easier
-  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
+  pers_new <- pers %>% 
+          select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
 
 # Check out some outliers
-  pers_new %>%
-  filter(is.na(SSD_index))
+#  pers_new %>%
+#  filter(is.na(SSD_index))
 
 # Check species numbers
   pers_new %>%
@@ -95,10 +92,10 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
                        sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
 
 # Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
-  spp_drop <- pers_new %>%
-  filter(is.na(CVR_yi))
+  #spp_drop <- pers_new %>%
+  #filter(is.na(CVR_yi))
 
-  as.character(unique(spp_drop$spp_name_phylo))
+  #as.character(unique(spp_drop$spp_name_phylo))
 
 # Exclude NAs
   pers_new <- pers_new %>%
@@ -148,31 +145,30 @@ The directional meaning of effect sizes vary depending on the specific units and
 For each taxonomic group the phylogenetic trees have been constructed. We'll use these trees for multi-level meta-analytic models throughout. 
 
 ```{r}
+    
+    # Find all tree file names
     tree_files <- paste0("./trees/", list.files("./trees"))[-1]
 
-    # Read in bird trees (100) and take the average tree as concensus tree
-       tree_bird <- read_birds(tree_files[1])
-        
+    # Read in bird trees (100) and take the average tree as consensus tree. Only need to do this once, and then re-write the file to make things easier. Note that here we are just writing the consensus tree
+        #tree_bird <- read_birds(tree_files[1])
+        #write.tree(tree_bird, "bird_species.nwk")
+    
     # Get the rest of the taxa    
-      trees <- lapply(tree_files[c(2:length(tree_files))], function(x) read.tree(x))
+      trees <- lapply(tree_files, function(x) read.tree(x))
       names <- gsub("./trees/", "", tree_files)
-      names(trees) <- names[c(2:length(tree_files))]
+      names(trees) <- names
 
     # Plot the trees and see how they look
       par(mfrow = c(1,5), mar = c(1,1,1,1))
-      plot(tree_bird)
       lapply(trees, function(x) plot(x, cex = 1))
 
     # Check that they are ultrametric
-      is.ultrametric(tree_bird)
       lapply(trees, function(x) is.ultrametric(x))
 
     # Check that all names in the phylogeny are also in the data
       taxa_data_list <- split(pers_new, pers_new$taxo_group)
-    
-      tree_checks(taxa_data_list[[1]], tree_bird, "spp_name_phylo", type = "checks")
       
-      other_groups <- mapply(x = taxa_data_list[-1], 
+      other_groups <- mapply(x = taxa_data_list, 
                              y = trees, 
                              function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
 
@@ -181,21 +177,25 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
             print(i)
             print(other_groups[,i] )
       }
-        prune_mammals <- tree_checks(taxa_data_list[[4]], trees[[3]], "spp_name_phylo", type = "prune")
+      
 
-        prune_invert <- tree_checks(taxa_data_list[[3]], trees[[2]], "spp_name_phylo", type = "prune")
+      # Now we are ready to prune trees so that we get tree names match with species in data
+      pruned_trees <- mapply(x = taxa_data_list, 
+                             y = trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
+
+      # Check that this has been done correctly
+        re_checks <- mapply(x = taxa_data_list, 
+                             y = pruned_trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+        
+      for(i in colnames(re_checks)){
+            print(i)
+            print(re_checks[,i] )
+      }
 
     # Extract the phylogenetic correlation matrices
-      phylo_vcv_birds <- vcv(tree_bird, corr= TRUE)
             phylo_vcv <- lapply(trees, function(x) vcv(x, corr = TRUE))
-
-    # Combine these together in a list
-                     phylo_VCVs <- phylo_vcv
-         phylo_VCVs[[names[1]]] <- phylo_vcv_birds
-
-    # Order list so birds are first
-         phylo_VCVs <- phylo_VCVs %>%
-            list.subset(names) #rlist package
 
 ```
 

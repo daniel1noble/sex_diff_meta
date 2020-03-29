@@ -87,7 +87,7 @@ tree_checks <- function(data, tree, dataCol, type = c("checks", "prune")){
 
         # How many unique species exist in data and tree
         Numbers <- matrix(nrow = 2, ncol = 1)
-        Numbers[1,1] <- length(unique(data$spp_name_phylo)) 
+        Numbers[1,1] <- length(unique(data[,dataCol])) 
         Numbers[2,1] <- length(tree$tip.label) 
 
         rownames(Numbers)<- c("Species in data:", "Species in tree:")
