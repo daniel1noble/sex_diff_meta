@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
   devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE); 
   devtools::install_github("daniel1noble/metaAidR"); 
 
-  pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta, ape, geiger, phytools, phangorn, rlist, orchaRd, metaAidR)
+  pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta, ape, geiger, phytools, phangorn, rlist, orchaRd, metaAidR, corrplot)
 
 # Source our own functions
   source("./R/func.R")
@@ -340,3 +340,36 @@ if(rerun_models == TRUE){
 1) We need to refit these models accounting for any dependency resulting from the same traits measured on the same animals (likely a big one) and any other shared covariance. Probably this is best added to the residual variance matrix as opposed to the sampling covariance. 
 2) Need to test if there are differences between proportion data; include moderator in a simple model. 
 3) Need to test if there are differences between score data; include moderator in a simple model. 
+
+```{r}
+ # Create the dependency matrices; try 3 levels of rho = 0.3, 0.5, 0.8
+      
+      pers_new <- data.frame(pers_new %>%
+      group_by(taxo_group) %>%
+      mutate(depend_n = paste0(study_ID, "_", depend)))
+    
+
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+
+  D_matrices_0.3 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.3))
+
+  # NOTE: Lauren –Have a look and make sure these matrices are correct. You should see correlations for numbers within studies that match. Usually these are blocks of effects along the diagonal. IF you have ones far away form the signal, then you need to check these. Here is an example with reptiles
+    corrplot(D_matrices_0.3[[5]], tl.cex= 0.3) # Reptiles
+    # write.csv(D_matrices_0.3[[5]], "reptiles_D.csv") # Can write it and have a closer look too
+
+    #Once happy with the D matrices you can refit models, but just modify as follows:
+
+    fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
+
+          lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv, obs = D), data = data)
+
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv, obs = D), data = data) 
+
+          return(list(SMD = SMD, 
+                lnCVR = lnCVR))
+}
+
+
+```
+
+
