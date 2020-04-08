@@ -92,6 +92,24 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
   dim(pers_new)            
 ```
 
+pers_new_test <- split(pers_new, pers_new$taxo_group)
+
+par(mfrow=c(3,2))
+lapply(pers_new_test, function(x) hist(x$SSD_index))
+
+dat <- pers_new %>%
+filter(taxo_group == "bird" & personality_trait == "aggression")
+
+data.frame(pers_new %>%
+group_by(taxo_group, personality_trait) %>%
+filter(!is.na(SSD_index))%>%
+summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo))))
+
+ggplot(dat, aes(x=SSD_index, y = SMD_yi)) + 
+geom_point() +
+ylim(-5, 8)
+
+
 # Plot effect sizes to see how they look
 ```{r}
 # lnCVR
