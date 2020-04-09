@@ -92,22 +92,27 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
   dim(pers_new)            
 ```
 
+# Looking closely at SSD
+```{r}
 pers_new_test <- split(pers_new, pers_new$taxo_group)
 
 par(mfrow=c(3,2))
 lapply(pers_new_test, function(x) hist(x$SSD_index))
 
 dat <- pers_new %>%
-filter(taxo_group == "bird" & personality_trait == "aggression")
+filter(taxo_group == "bird" & personality_trait == "aggression") #looking at what's driving our strong aggression estimate
 
 data.frame(pers_new %>%
 group_by(taxo_group, personality_trait) %>%
 filter(!is.na(SSD_index))%>%
 summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo))))
 
+# plot it
 ggplot(dat, aes(x=SSD_index, y = SMD_yi)) + 
 geom_point() +
 ylim(-5, 8)
+
+```
 
 
 # Plot effect sizes to see how they look
@@ -133,6 +138,10 @@ ylim(-5, 8)
   # P014 is correct
 
 #NOTE Lauren. Can you also check all the data on the top of the funnels. For some analyses the ratio of smallest to largest sampling variance is very large. This could be problems with data that have very high precision, could be incorrect sample sizes, SD or SE entered wrong. For example, check all data where Inverse SE > 14 in funnel for SMD and > 17 for lnCVR.  
+  
+# checking SMD outliers - inverse SE > 14
+pers_new %>%
+  filter(SMD_vi > 14)
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
@@ -234,6 +243,20 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
   birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = "spp_name_phylo")
   birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = "spp_name_phylo")
   
+# checking I2 without the phylo vcv
+  birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = FALSE)
+  birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = FALSE) # nothing changes-need to rerun models, take things out
+
+# Finding I2 for the remaining species.
+  fish_smd = I2(smd_mods[[2]], v = split_taxa[[2]]$SMD_vi, phylo = "spp_name_phylo")
+  fish_CVR = I2(lnCVR_mods[[2]], v = split_taxa[[2]]$CVR_vi, phylo = "spp_name_phylo")
+  invert_smd = I2(smd_mods[[3]], v = split_taxa[[3]]$SMD_vi, phylo = "spp_name_phylo")
+  invert_CVR = I2(lnCVR_mods[[3]], v = split_taxa[[3]]$CVR_vi, phylo = "spp_name_phylo")
+  mammal_smd = I2(smd_mods[[4]], v = split_taxa[[4]]$SMD_vi, phylo = "spp_name_phylo")
+  mammal_CVR = I2(lnCVR_mods[[4]], v = split_taxa[[4]]$CVR_vi, phylo = "spp_name_phylo")
+  reptile_smd = I2(smd_mods[[5]], v = split_taxa[[5]]$SMD_vi, phylo = "spp_name_phylo")
+  reptile_CVR = I2(lnCVR_mods[[5]], v = split_taxa[[5]]$CVR_vi, phylo = "spp_name_phylo")
+  
 # Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. 
 
   MLMA_estimates_SMD <- plyr::ldply(lapply(smd_mods, function(x) print(mod_results(x, mod = "Int"))))
@@ -273,6 +296,15 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 # 7. Now have a look at how SSD interacting with personality trait type. Here we are not estimating a intercept either, so each intercept varies by trait category and each slope as well. Note that there are lots of warnings, but these are the result of many levels not being present in taxa groups. Note also here that the SSD_index is scaled to make the interpretation of the intercepts a little more sensible
 
 ```{r}
+
+# remove NAs from SSD data before running the model
+# Exclude NAs
+  pers_new <- pers_new %>%
+              filter(!is.na(SSD_index))
+  dim(pers_new)    
+  
+# flip SSD index so males > females = positive value instead of males < females = positive
+# pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
   
 if(rerun_models == TRUE){
       MLMR_models_pers_SSD <- meta_model_fits(pers_new, phylo_vcv, type = "pers_SSD")
@@ -286,6 +318,8 @@ if(rerun_models == TRUE){
   lnCVR_mods_pers_SSD <- MLMR_models_pers_SSD["lnCVR",]
 
 # NOTE: Lauren you'll need to write a function to extract estimates here as the mod_results from OrchaRd only works with a single categorical moderator. Or, you can manually extract, but I don't recommend.
+  
+# Can we add in n and k to these dataframes?
 
 ```
 
