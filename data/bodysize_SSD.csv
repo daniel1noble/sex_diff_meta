@@ -140,7 +140,7 @@ species_no,species_name,taxo_group,m_BS,m_SE,f_BS,f_SE,error type,measure,measur
 139,Neochmia phaeton ,bird,10,0.09,9.65,0.09,SE,mass,body mass (g),0.036,-0.015,2,monogamous,biparental
 140,Neogobius melanostomus ,fish,63,33,69,29,SD,length,body length (mm),-0.087,0.04,2,polygynous,paternal
 141,Neolamprologus caudopunctatus,fish,57.7,3.8,53.7,10,,length,standard length (mm),0.074,-0.031,2,monogamous,biparental
-142,Neolamprologus pulcher,fish,62,0.6,NA,NA,SE,length,standard length (mm),,,1,multiple mating,cooperative
+142,Neolamprologus pulcher,fish,62,0.6,NA,NA,SE,length,standard length (mm),,,1,NA,cooperative
 143,Neovison vison ,mammal,1310.2,38.9,780.7,21,SE,mass,body mass (g),0.678,-0.225,2,promiscuous,maternal
 144,Nothobranchius furzeri ,fish,40,2.7,33,2.5,SD,length,total length (mm),0.212,-0.084,2,promiscuous,none
 145,Nuctenea umbratica ,invertebrate,0.067,0.021,0.107,0.03,SD,mass,body mass (g),-0.374,0.203,2,monogamous,maternal
