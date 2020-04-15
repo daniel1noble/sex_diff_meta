@@ -8,44 +8,45 @@
 
 fit_int_MLMAmodels <- function(data, phylo_vcv){
 
-          lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test="t", data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data, test="t")
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
 }
 
 fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test="t", data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test="t", data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
 }
 
 fit_MLMA_reg_models_personality_trait_SSD_index <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test="t", data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), test="t", R = list(spp_name_phylo=phylo_vcv), data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
 }
 
 fit_MLMA_reg_models_personality_trait_mating_system  <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait*mating_system, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + mating_system, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*mating_system, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + mating_system, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
 }
 
 fit_MLMA_reg_models_parental_care  <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ parental_care - 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ parental_care - 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ parental_care - 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ parental_care - 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))

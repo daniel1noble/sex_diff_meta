@@ -61,7 +61,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
 # Add in observation level random effect
   pers_new <- pers_new %>% 
             group_by(taxo_group) %>% 
-            mutate(obs = 1:length( study_ID))
+            mutate(obs = 1:length(study_ID))
 ```
 
 # 4. Calculate effect sizes (SMD and lnCVR)
@@ -260,7 +260,6 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 # Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. 
 
   MLMA_estimates_SMD <- plyr::ldply(lapply(smd_mods, function(x) print(mod_results(x, mod = "Int"))))
-
   MLMA_estimates_lnCVR <- plyr::ldply(lapply(lnCVR_mods, function(x) print(mod_results(x, mod = "Int"))))
 
 ```
@@ -321,22 +320,73 @@ if(rerun_models == TRUE){
   
 # Can we add in n and k to these dataframes?
 
+# adjusted models used for SSD:
+  # SSD (not scaled), no interaction term
+    lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, random~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+
+    SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+
 ```
 
-# 8. We can also have a look at fitting a model that estimates an interaction between mating system (a second proxy for SSD) and 
+# 8. We can also have a look at fitting a model that estimates an interaction between mating system (a second proxy for SSD) and personality trait
+
 ```{r}
 
 # NOTE Lauren: Seems to be some problems here, probably just lots of missing data. You're probably just going to have to select the taxon group, corresponding tree and subset the data and selectively run a subset of models. 
+
   if(rerun_models == TRUE){
-      MLMR_models_pers_mating <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+      MLMR_models_pers_mating <- meta_model_fits(pers_mate, phylo_vcv, type = "pers_mate")
       saveRDS(MLMR_models_pers_mating, "./output/MLMR_models_pers_mating")
     } else{
       MLMR_models_pers_mating <- readRDS("./output/MLMR_models_pers_mating")
     }
 
+# first bunch of models kept terminating with the error: There are rows/columns in the 'R' matrix for 'spp_name_phylo' for which there are no data.Error in metafor::rma.mv(CVR_yi ~ parental_care - 1, V = CVR_vi, random = list(~1 |  : Processing terminated since k <= 1.
+# Let's try to run these models by dropping reptiles and all NAs and pruning the phylo trees accordingly
+
+# Drop missing data and reptiles  
+    pers_new_matingsystem <- as.data.frame(pers_new %>%
+    filter(!is.na(mating_system) & !taxo_group == "reptilia"))
+
+  # Check that this has been done correctly. No reptiles and no NA levels 
+      pers_new_matingsystem %>%
+      group_by(taxo_group, mating_system) %>%
+      summarise(n = n(), studies = length(unique(study_ID)))  
+      
+# polyandrous and polygynous insects only have data from 1 study, let's try dropping those to see if the model works without them
+    #pers_new_matingsystem %>%
+    #filter(!taxo_group == "invertebrate") | (!mating_system == "polyandrous" & !mating_system == "polygynous")
+    
+# Trim trees to remove species we lost as a result of NAs
+    pers_new_matingsystem_list <- split(pers_new_matingsystem, pers_new_matingsystem$taxo_group, drop = TRUE)
+
+     pruned_trees_MS <- mapply(x = pers_new_matingsystem_list, 
+                             y = trees[-5], # drop out reptiles
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
+
+      # Check that this has been done correctly
+        checks <- mapply(x = pers_new_matingsystem_list, 
+                             y = pruned_trees_MS, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+        
+      for(i in colnames(checks)){
+            print(i)
+            print(checks[,i] )
+      }
+
+# Extract the phylogenetic correlation matrices
+            phylo_vcv_MS <- lapply(pruned_trees_MS, function(x) vcv(x, corr = TRUE))      
+      
+# Rerun the model
+     MLMR_models_matingsys <- meta_model_fits(pers_new_matingsystem, phylo_vcv_MS, type = "pers_mate")
+            
 # Extract the SMD and lnCVR results
     smd_mods_pers_mating <- MLMR_models_pers_mating["SMD",]
   lnCVR_mods_pers_mating <- MLMR_models_pers_mating["lnCVR",]
+  
+# Extract combined estimates
+ MLMA_estimates_SMD_mating <- plyr::ldply(lapply(smd_mods_pers_mating, function(x) print(mod_results(x, mod = "pers_mate"))))
+ MLMA_estimates_lnCVR_mating <- plyr::ldply(lapply(lnCVR_mods_pers_mating, function(x) print(mod_results(x, mod = "pers_mate"))))
 
 ```
 
@@ -382,8 +432,8 @@ if(rerun_models == TRUE){
   lnCVR_mods_par_care <- MLMR_models_par_care["lnCVR",]
 
 # Get the combined estimates from them all
-   MLMA_estimates_SMD_par_care <- plyr::ldply(lapply(smd_mods_par_care, function(x) print(mod_results(x, mod = "parental_care"))))
- MLMA_estimates_lnCVR_par_care <- plyr::ldply(lapply(lnCVR_mods_par_care, function(x) print(mod_results(x, mod = "parental_care"))))
+   MLMA_estimates_SMD_par_care <- plyr::ldply(lapply(smd_mods_par_care, function(x) print(mod_results(x, mod = "parent_care"))))
+ MLMA_estimates_lnCVR_par_care <- plyr::ldply(lapply(lnCVR_mods_par_care, function(x) print(mod_results(x, mod = "parent_care"))))
 
 ```
 
