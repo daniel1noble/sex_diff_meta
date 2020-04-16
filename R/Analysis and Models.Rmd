@@ -32,8 +32,8 @@ rerun_models = FALSE
 
 # 2. Load datasets
 ```{r}
-    pers <- read.csv("./data/pers_data.csv")
-bodysize <- read.csv("./data/bodysize_SSD.csv")
+    pers <- read.csv("./data/pers_data.csv", stringsAsFactors = FALSE)
+bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 
 ```
 
@@ -42,7 +42,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv")
 
 # Merge spp_names columns
   pers <- merge(x = pers,
-                y = bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],
+                y = bodysize[,c("species_name", "SSD_index")],
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
 
 # Just select the relevant columns for now to make life easier
