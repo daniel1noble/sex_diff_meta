@@ -40,14 +40,20 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 # 3. Fix "pers" dataset before we get started
 ```{r}
 
+# check for differences between pers and bodysize "species names" columns before joining them
+  setdiff(bodysize$species_name, pers$species_name) 
+      #Archocentrus nigrofasciatus is in body size but not pers - is now Amatitlania nigrofasciata which is it's own entry
+  setdiff(pers$species_name, bodysize$species_name) 
+      #Brachyraphis episcopi is in pers but not bodysize - spelling error now fixed
+
 # Merge spp_names columns
   pers <- merge(x = pers,
                 y = bodysize[,c("species_name", "SSD_index")],
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
-
+  
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
 
 # Check out some outliers
 #  pers_new %>%
@@ -62,6 +68,8 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   pers_new <- pers_new %>% 
             group_by(taxo_group) %>% 
             mutate(obs = 1:length(study_ID))
+  
+# NOTE FOR LAUREN save prepared pers_new dataset as output to save time :)
 ```
 
 # 4. Calculate effect sizes (SMD and lnCVR)
@@ -105,7 +113,7 @@ filter(taxo_group == "bird" & personality_trait == "aggression") #looking at wha
 data.frame(pers_new %>%
 group_by(taxo_group, personality_trait) %>%
 filter(!is.na(SSD_index))%>%
-summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo))))
+summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))  
 
 # plot it
 ggplot(dat, aes(x=SSD_index, y = SMD_yi)) + 
@@ -243,10 +251,6 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
   birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = "spp_name_phylo")
   birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = "spp_name_phylo")
   
-# checking I2 without the phylo vcv
-  birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = FALSE)
-  birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = FALSE) # nothing changes-need to rerun models, take things out
-
 # Finding I2 for the remaining species.
   fish_smd = I2(smd_mods[[2]], v = split_taxa[[2]]$SMD_vi, phylo = "spp_name_phylo")
   fish_CVR = I2(lnCVR_mods[[2]], v = split_taxa[[2]]$CVR_vi, phylo = "spp_name_phylo")
@@ -285,10 +289,10 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
  # You probably want to add in n and k to these dataframes
   n_k<- pers_new %>%
       group_by(taxo_group, personality_trait) %>%
-      summarise(n = n(), k = length(unique(study_ID)))
+      summarise(n = n(), spp = length(unique(spp_name_phylo)), k = length(unique(study_ID)))
 
-  MLMA_estimates_SMD_pers <- data.frame(MLMA_estimates_SMD_pers, n_k[,c("n", "k")])
-  MLMA_estimates_lnCVR_pers <- data.frame(MLMA_estimates_lnCVR_pers, n_k[,c("n", "k")])
+  MLMA_estimates_SMD_pers <- data.frame(MLMA_estimates_SMD_pers, n_k[,c("n", "spp", "k")])
+  MLMA_estimates_lnCVR_pers <- data.frame(MLMA_estimates_lnCVR_pers, n_k[,c("n", "spp", "k")])
 
 ```
 
@@ -471,7 +475,17 @@ if(rerun_models == TRUE){
                 lnCVR = lnCVR))
 }
 
-
 ```
 
+# 11. Making plots
+```{r}
+# Use orchard plot package to generate plots for our intercept models:
+# Birds SMD
+orchard_plot(smd_mods[[1]], mod = "Int", xlab = "Standardised mean difference", transfm = "none")
+
+# for plotting categorical moderators, like personality traits:
+# Fish lnCVR
+orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, 
+             transfm = "none")
+```
 
