@@ -43,8 +43,6 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 # check for differences between pers and bodysize "species names" columns before joining them
   setdiff(bodysize$species_name, pers$species_name) 
       #Archocentrus nigrofasciatus is in body size but not pers - is now Amatitlania nigrofasciata which is it's own entry
-  setdiff(pers$species_name, bodysize$species_name) 
-      #Brachyraphis episcopi is in pers but not bodysize - spelling error now fixed
 
 # Merge spp_names columns
   pers <- merge(x = pers,
@@ -100,29 +98,6 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   dim(pers_new)            
 ```
 
-# Looking closely at SSD
-```{r}
-pers_new_test <- split(pers_new, pers_new$taxo_group)
-
-par(mfrow=c(3,2))
-lapply(pers_new_test, function(x) hist(x$SSD_index))
-
-dat <- pers_new %>%
-filter(taxo_group == "bird" & personality_trait == "aggression") #looking at what's driving our strong aggression estimate
-
-data.frame(pers_new %>%
-group_by(taxo_group, personality_trait) %>%
-filter(!is.na(SSD_index))%>%
-summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))  
-
-# plot it
-ggplot(dat, aes(x=SSD_index, y = SMD_yi)) + 
-geom_point() +
-ylim(-5, 8)
-
-```
-
-
 # Plot effect sizes to see how they look
 ```{r}
 # lnCVR
@@ -137,6 +112,9 @@ ylim(-5, 8)
   pers_new %>%
   filter(SMD_yi > 3)
   
+# Effect sizes below -5
+  pers_new %>% 
+  filter(SMD_yi < -5)
 # checking SMD outliers
   # P038 is correct as reported in paper, but is a proportion
   # P029 has male SD wrong - paper says 64.4 but was recorded as 0.001 for some reason - amended in pers dataset
@@ -144,12 +122,16 @@ ylim(-5, 8)
   # P021 looks weird in paper too but is correct
   # P136 is correct
   # P014 is correct
+  # P029 male error looks too small
+  # P165 is a boldness score
+  # P015 6 effect sizes are proportions, the rest change direction (check figures though)
+  # P003 both effect sizes are aggression scores
+  
 
 #NOTE Lauren. Can you also check all the data on the top of the funnels. For some analyses the ratio of smallest to largest sampling variance is very large. This could be problems with data that have very high precision, could be incorrect sample sizes, SD or SE entered wrong. For example, check all data where Inverse SE > 14 in funnel for SMD and > 17 for lnCVR.  
   
 # checking SMD outliers - inverse SE > 14
-pers_new %>%
-  filter(SMD_vi > 14)
+funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv", pch=as.character(pers_new$study_ID))
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
@@ -306,6 +288,10 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
               filter(!is.na(SSD_index))
   dim(pers_new)    
   
+# plot SSD distribution in each taxo group for each pers trait to get an idea of spread
+  ggplot(pers_new, aes(x=taxo_group, y=SSD_index, fill=personality_trait)) 
+    + geom_boxplot()
+  
 # flip SSD index so males > females = positive value instead of males < females = positive
 # pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
   
@@ -322,124 +308,26 @@ if(rerun_models == TRUE){
 
 # NOTE: Lauren you'll need to write a function to extract estimates here as the mod_results from OrchaRd only works with a single categorical moderator. Or, you can manually extract, but I don't recommend.
   
-# Can we add in n and k to these dataframes?
+# A crude way to see no. unique species, no. unique studies and no. SSD values for each taxo group and for each pers trait in these models
+data.frame(pers_new %>%
+group_by(taxo_group, personality_trait) %>%
+filter(!is.na(SSD_index))%>%
+summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
 
 # adjusted models used for SSD:
   # SSD (not scaled), no interaction term
-    lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, random~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+    lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, random~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-    SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), data = data)
+    SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-```
+  # interaction models with optimiser changed for convergence
+              lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
 
-# 8. We can also have a look at fitting a model that estimates an interaction between mating system (a second proxy for SSD) and personality trait
-
-```{r}
-
-# NOTE Lauren: Seems to be some problems here, probably just lots of missing data. You're probably just going to have to select the taxon group, corresponding tree and subset the data and selectively run a subset of models. 
-
-  if(rerun_models == TRUE){
-      MLMR_models_pers_mating <- meta_model_fits(pers_mate, phylo_vcv, type = "pers_mate")
-      saveRDS(MLMR_models_pers_mating, "./output/MLMR_models_pers_mating")
-    } else{
-      MLMR_models_pers_mating <- readRDS("./output/MLMR_models_pers_mating")
-    }
-
-# first bunch of models kept terminating with the error: There are rows/columns in the 'R' matrix for 'spp_name_phylo' for which there are no data.Error in metafor::rma.mv(CVR_yi ~ parental_care - 1, V = CVR_vi, random = list(~1 |  : Processing terminated since k <= 1.
-# Let's try to run these models by dropping reptiles and all NAs and pruning the phylo trees accordingly
-
-# Drop missing data and reptiles  
-    pers_new_matingsystem <- as.data.frame(pers_new %>%
-    filter(!is.na(mating_system) & !taxo_group == "reptilia"))
-
-  # Check that this has been done correctly. No reptiles and no NA levels 
-      pers_new_matingsystem %>%
-      group_by(taxo_group, mating_system) %>%
-      summarise(n = n(), studies = length(unique(study_ID)))  
-      
-# polyandrous and polygynous insects only have data from 1 study, let's try dropping those to see if the model works without them
-    #pers_new_matingsystem %>%
-    #filter(!taxo_group == "invertebrate") | (!mating_system == "polyandrous" & !mating_system == "polygynous")
-    
-# Trim trees to remove species we lost as a result of NAs
-    pers_new_matingsystem_list <- split(pers_new_matingsystem, pers_new_matingsystem$taxo_group, drop = TRUE)
-
-     pruned_trees_MS <- mapply(x = pers_new_matingsystem_list, 
-                             y = trees[-5], # drop out reptiles
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
-
-      # Check that this has been done correctly
-        checks <- mapply(x = pers_new_matingsystem_list, 
-                             y = pruned_trees_MS, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
-        
-      for(i in colnames(checks)){
-            print(i)
-            print(checks[,i] )
-      }
-
-# Extract the phylogenetic correlation matrices
-            phylo_vcv_MS <- lapply(pruned_trees_MS, function(x) vcv(x, corr = TRUE))      
-      
-# Rerun the model
-     MLMR_models_matingsys <- meta_model_fits(pers_new_matingsystem, phylo_vcv_MS, type = "pers_mate")
-            
-# Extract the SMD and lnCVR results
-    smd_mods_pers_mating <- MLMR_models_pers_mating["SMD",]
-  lnCVR_mods_pers_mating <- MLMR_models_pers_mating["lnCVR",]
-  
-# Extract combined estimates
- MLMA_estimates_SMD_mating <- plyr::ldply(lapply(smd_mods_pers_mating, function(x) print(mod_results(x, mod = "pers_mate"))))
- MLMA_estimates_lnCVR_mating <- plyr::ldply(lapply(lnCVR_mods_pers_mating, function(x) print(mod_results(x, mod = "pers_mate"))))
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
 
 ```
 
-# 9. Run random effects models for each of the parental care separately, and for each of the taxonomic groups
-```{r}
-#NOTE Lauren: This is problematic given the huge amount of missing data here. So, you'll need to exclude the data and also reptiles and any taxa. The phylogeny also needs to be trimmed again, which I have done. But, looking below, a lot of this data on certain groups comes from one study. I don't know that parental care will be too useful 
-
-# OK, now we can have a look at a sensible model that looks at moderators. We'll look first at the personality trait moderator. Note, we'll estimate the mean for each of the categorical levels because we are not so much interested in whether the means differ, but whether or not males and females differ in any of these traits. 
-
-# Because this is so much missing data in parental care and reptiles are hopeless, we can exclude these taxa. 
-    pers_new_parentalcare <- as.data.frame(pers_new %>%
-    filter(!is.na(parental_care) & !taxo_group == "reptilia"))
-
-  #Check that this has been done correctly. No reptiles and no NA levels with parental care
-      pers_new_parentalcare %>%
-      group_by(taxo_group, parental_care) %>%
-      summarise(n = n(), studies = length(unique(study_ID)))
-
-# Because we excluded so much, we need to ditch species we lost as a result of this
-    pers_new_parentalcare_list <- split(pers_new_parentalcare, pers_new_parentalcare$taxo_group, drop = TRUE)
-
-     pruned_trees_PC <- mapply(x = pers_new_parentalcare_list, 
-                             y = trees[-5], # drop out reptiles
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
-
-      # Check that this has been done correctly
-        re_checks <- mapply(x = pers_new_parentalcare_list, 
-                             y = pruned_trees_PC, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
-        
-      for(i in colnames(re_checks)){
-            print(i)
-            print(re_checks[,i] )
-      }
-
-# Extract the phylogenetic correlation matrices
-            phylo_vcv_PC <- lapply(pruned_trees_PC, function(x) vcv(x, corr = TRUE))
-
-  MLMR_models_par_care <- meta_model_fits(pers_new_parentalcare, phylo_vcv_PC, type = "parent_care")
-
-# Extract the SMD and lnCVR results
-    smd_mods_par_care <- MLMR_models_par_care["SMD",]
-  lnCVR_mods_par_care <- MLMR_models_par_care["lnCVR",]
-
-# Get the combined estimates from them all
-   MLMA_estimates_SMD_par_care <- plyr::ldply(lapply(smd_mods_par_care, function(x) print(mod_results(x, mod = "parent_care"))))
- MLMA_estimates_lnCVR_par_care <- plyr::ldply(lapply(lnCVR_mods_par_care, function(x) print(mod_results(x, mod = "parent_care"))))
-
-```
+# 8. mating system and 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis
 
 # 10. TO DO Sensitivity Analyses: 
 
@@ -454,14 +342,18 @@ if(rerun_models == TRUE){
       group_by(taxo_group) %>%
       mutate(depend_n = paste0(study_ID, "_", depend)))
     
-
-    split_taxa <- split(pers_new, pers_new$taxo_group)
-
+      split_taxa <- split(pers_new, pers_new$taxo_group)
+    
+# 0.3 rho:
   D_matrices_0.3 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.3))
-
+# 0.5 rho:
+   D_matrices_0.5 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.5))
+# 0.8 rho:   
+    D_matrices_0.8 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.8))
+  
   # NOTE: Lauren –Have a look and make sure these matrices are correct. You should see correlations for numbers within studies that match. Usually these are blocks of effects along the diagonal. IF you have ones far away form the signal, then you need to check these. Here is an example with reptiles
     corrplot(D_matrices_0.3[[5]], tl.cex= 0.3) # Reptiles
-    # write.csv(D_matrices_0.3[[5]], "reptiles_D.csv") # Can write it and have a closer look too
+    write.csv(D_matrices_0.3[[5]], "reptiles_D.csv") # Can write it and have a closer look too
 
     #Once happy with the D matrices you can refit models, but just modify as follows:
 
@@ -475,17 +367,93 @@ if(rerun_models == TRUE){
                 lnCVR = lnCVR))
 }
 
+  # rewrite function to split model by taxa and give us the summary
+  meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
+         taxa_list <- split(data, data$taxo_group)
+
+      type <-  match.arg(type)
+
+    if(type == "int"){
+        model_fits <- mapply(function(x, y) fit_int_MLMAmodel_D(x, y), x = taxa_list, y = phylo_vcv)
+    }
+
+    if(type == "pers"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_personality_trait(x, y), x = taxa_list, y = phylo_vcv)
+    }
+
+  	if(type == "pers_SSD"){
+        model_fits <- mapply(function(x,y) fit_MLMA_reg_models_personality_trait_SSD_index(x, y), x = taxa_list, y = phylo_vcv)
+    }
+
+   return(model_fits)
+} 
+
+# intercept models with rho = 0.5
+MLMA_models_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "int")
+
+split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D <- MLMA_models_D["SMD",]
+  lnCVR_mods_D <- MLMA_models_D["lnCVR",]
+
+  MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, function(x) print(mod_results(x, mod = "Int"))))
+  
+# no change at rho = 0.5
+  
+# pers models with rho = 0.5
+MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "pers")
+
+# Extract the SMD and lnCVR results
+    smd_mods_pers_D <- MLMR_models_pers_trait_D["SMD",]
+  lnCVR_mods_pers_D <- MLMR_models_pers_trait_D["lnCVR",]
+
+# Get the combined estimates from them all
+   MLMA_estimates_SMD_pers_D <- plyr::ldply(lapply(smd_mods_pers_D, function(x) print(mod_results(x, mod = "personality_trait"))))
+ MLMA_estimates_lnCVR_pers_D <- plyr::ldply(lapply(lnCVR_mods_pers_D, function(x) print(mod_results(x, mod = "personality_trait"))))
+ 
+# SSD models with rho = 0.5
+ MLMR_models_pers_SSD_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "pers_SSD")
+
+ # Extract the SMD and lnCVR results
+    smd_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["SMD",]
+  lnCVR_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["lnCVR",]    
 ```
 
 # 11. Making plots
 ```{r}
 # Use orchard plot package to generate plots for our intercept models:
-# Birds SMD
+# Birds SMD & lnCVR
 orchard_plot(smd_mods[[1]], mod = "Int", xlab = "Standardised mean difference", transfm = "none")
+orchard_plot(lnCVR_mods[[1]], mod = "Int", xlab = "log Coefficient of Variance (lnCVR)", transfm = "none")
 
 # for plotting categorical moderators, like personality traits:
+# Bird lnCVR
+bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
 # Fish lnCVR
-orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, 
-             transfm = "none")
+fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+# Invert lnCVR
+invert_lncvr<- orchard_plot(lnCVR_mods_pers[[3]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+# Mammal lnCVR
+mammal_lncvr <- orchard_plot(lnCVR_mods_pers[[4]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+# Reptile lnCVR
+reptile_lncvr <- orchard_plot(lnCVR_mods_pers[[5]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+
+# try wrapping them using patchwork
+
+# personality SMD
+# Bird SMD
+bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+# Fish lnCVR
+fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+# Invert lnCVR
+invert_SMD<- orchard_plot(smd_mods_pers[[3]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+# Mammal lnCVR
+mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+# Reptile lnCVR
+reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+
+# put them all together!
+bird_SMD + bird_lncvr + fish_SMD + fish_lncvr + invert_SMD + invert_lncvr + mammal_SMD + mammal_lncvr + reptile_SMD + reptile_lncvr
+
 ```
 
