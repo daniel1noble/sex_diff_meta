@@ -107,6 +107,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 #SMD
   hist(pers_new$SMD_yi)
   funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+  text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
 
 # Effect sizes 3 and above
   pers_new %>%
@@ -131,7 +132,8 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 #NOTE Lauren. Can you also check all the data on the top of the funnels. For some analyses the ratio of smallest to largest sampling variance is very large. This could be problems with data that have very high precision, could be incorrect sample sizes, SD or SE entered wrong. For example, check all data where Inverse SE > 14 in funnel for SMD and > 17 for lnCVR.  
   
 # checking SMD outliers - inverse SE > 14
-funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv", pch=as.character(pers_new$study_ID))
+funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+ text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
