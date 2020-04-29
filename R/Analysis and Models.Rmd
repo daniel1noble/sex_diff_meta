@@ -133,7 +133,30 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # checking SMD outliers - inverse SE > 14
 funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
- text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
+ text(as.character(pers_new$obs), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi), offset = 0.8)
+ 
+# outliers (SMD):
+    # obs 509 (-23 for SMD) - in P015 and is correct/ genuine strong difference
+    # obs 128 (27.87 inverse SE) - in P041: is a score for aggression, but looks correct
+    # obs 120 (also high inverse SE) - in P091: looks correct, females have more variation than males, but same means
+    # obs 41 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
+    # obs 42 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
+    # obs 136 (big SMD, high error?) - in P165: SCORE - big sample size, precise data
+    # obs 121 (no mean diff, small error) - in P041: SCORE - big sample size, big SD
+    # obs 301 (no mean diff, small error) - in P211: exploration time, big sample sizes so high precision?
+    # obs 603 (no mean diff, small error) - in P097 or P157?
+
+# checking lnCVR outliers
+ funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+ text(as.character(pers_new$obs), x = pers_new$CVR_yi, y = 1/sqrt(pers_new$CVR_vi), offset = 0.8) 
+  
+# outliers (lnCVR):
+    # obs 120 - in P041? - really big sample size, small error (so precise?)
+    # obs 128 - in P041 - aggression SCORE, again big sample size and small error
+    # obs 124 - in P041 - same thing
+    # obs 121 - also in P041
+    # obs 136 - in P165 - score, males and females have the same error from a really big sample size (check this one out)
+ 
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
@@ -231,7 +254,7 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
     smd_mods <- MLMA_models["SMD",]
   lnCVR_mods <- MLMA_models["lnCVR",]
 
-# From these models we can get I2 estimates. I'll show an example with birds. study_ID is the between study heterogeneity. Just pay attention to the "phylo", that tels sif there is a phylogenetic signal and the strength of that signal. Total I2 is testing how much heterogeneity you have beyond sampling variance.
+# From these models we can get I2 estimates. I'll show an example with birds. study_ID is the between study heterogeneity. Just pay attention to the "phylo", that tells if there is a phylogenetic signal and the strength of that signal. Total I2 is testing how much heterogeneity you have beyond sampling variance.
   birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = "spp_name_phylo")
   birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = "spp_name_phylo")
   
@@ -291,8 +314,7 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
   dim(pers_new)    
   
 # plot SSD distribution in each taxo group for each pers trait to get an idea of spread
-  ggplot(pers_new, aes(x=taxo_group, y=SSD_index, fill=personality_trait)) 
-    + geom_boxplot()
+  ggplot(pers_new, aes(x=taxo_group, y=SSD_index, fill=personality_trait)) + geom_boxplot()
   
 # flip SSD index so males > females = positive value instead of males < females = positive
 # pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
@@ -327,6 +349,125 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
 
             SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
 
+```
+
+# NOTE: Since we are conducting our meta-regression at the species level (the level at which we can assume effect sizes are independent), any personality trait with fewer than 10 species needs to be dropped to look at interactions between SSD and personality. Having a minimum of 10 studies etc. is the rule of thumb for meta-regressions (e.g. see Borenstein et al Intro to Meta-A)
+
+```{r}
+# NEED TO DROP: 
+#   ALL REPTILES - GONE
+#   BIRDS - EVERYTHING BUT BOLDNESS - DONE
+#   FISH - ACTIVITY, EXPLORATION & SOCIALITY - DONE
+#   INVERTS - SOCIALITY, EXPLORATION & AGGRESSION - DONE
+#   MAMMALS - SOCIALITY - DONE
+
+# 1. MAMMALS
+
+# First, we need to subset our pers dataset by taxo group to drop the unwanted levels. Let's start with mammals because it's the easiest one
+    pers_new_mammal <- as.data.frame(pers_new %>%
+    filter(!personality_trait == "sociality" & taxo_group == "mammal"))
+
+  # Check that this has been done correctly
+      pers_new_mammal %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+
+# Extract the phylogenetic correlation matrices
+  phylo_vcv_mammal <- phylo_vcv[[4]] # seems to work better than the crap I just went through
+
+# Rerun SSD model with interaction term:
+#SMD
+  MLMR_mods_pers_SSD_mammal_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*scale(SSD_index), V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_mammal)
+
+#lnCVR
+  MLMR_mods_pers_SSD_mammal_lncvr <- rma.mv(CVR_yi ~ -1+ personality_trait*scale(SSD_index), V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_mammal)
+  
+# 2. BIRDS
+
+  # subset dataset
+  pers_new_bird <- as.data.frame(pers_new %>%
+    filter(personality_trait == "boldness" & taxo_group == "bird"))
+
+  # Check that this has been done correctly
+      pers_new_bird %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
+
+  # phylo_vcv - let's just see if we can use the same tree like with mammals
+  phylo_vcv_bird <- phylo_vcv[[1]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ 1- SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_bird)
+
+#lnCVR
+  MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ 1- SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_bird)
+  
+# 3. FISH
+  # subset dataset
+  pers_new_fish <- as.data.frame(pers_new %>%
+   filter(personality_trait == "boldness" | personality_trait == "aggression") %>%
+  filter(taxo_group == "fish")) 
+    
+  # Check that this has been done correctly
+      pers_new_fish %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+  phylo_vcv_fish <- phylo_vcv[[2]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_SSD_fish_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_fish)
+
+#lnCVR
+  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_fish)
+
+# 4. INVERTS
+  # subset dataset
+  pers_new_invert <- as.data.frame(pers_new %>%
+   filter(personality_trait == "activity" | personality_trait == "boldness") %>%
+  filter(taxo_group == "invertebrate")) 
+    
+  # Check that this has been done correctly
+      pers_new_invert %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+  phylo_vcv_invert <- phylo_vcv[[3]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_SSD_invert_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*scale(SSD_index), V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_invert)
+
+#lnCVR
+  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*scale(SSD_index), V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_invert)  
 ```
 
 # 8. mating system and 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis
