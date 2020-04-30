@@ -51,7 +51,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, age)
 
 # Check out some outliers
 #  pers_new %>%
@@ -472,6 +472,40 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
 
 # 8. mating system and 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis
 
+# 10. Age
+Also recorded whether individuals were adults or juveniles (not sexually mature). Since we might expect that sex differences in behaviours (particularly behaviours related to mate choice or mating success) would manifest once individuals are sexually mature, it would sprobably be a good idea to see if age moderates sex differences in personalities. Let's have a look at this in a secondary model with age as a moderator:
+
+```{r}
+# Let's see what we have to work with
+data.frame(pers_new %>%
+group_by(taxo_group, personality_trait, age) %>%
+summarise(N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# some groups have only 1 effect size or 1 species, we can probably remove those 
+
+# we can modify our mating system model to look at age as a categorical moderator
+
+fit_MLMA_reg_models_personality_trait_age  <- function(data, phylo_vcv){
+          lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + age, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + age, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+
+          return(list(SMD = SMD, 
+          			lnCVR = lnCVR))
+}
+
+# model:
+ MLMR_models_pers_age <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_age <- MLMR_models_pers_age["SMD",]
+  lnCVR_mods_pers_age <- MLMR_models_pers_age["lnCVR",]
+  
+# these models have adult age as the intercept, probably need to figure out how to swap the levels and compare them
+
+```
+
+
 # 10. TO DO Sensitivity Analyses: 
 
 1) We need to refit these models accounting for any dependency resulting from the same traits measured on the same animals (likely a big one) and any other shared covariance. Probably this is best added to the residual variance matrix as opposed to the sampling covariance. 
@@ -510,6 +544,8 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
                 lnCVR = lnCVR))
 }
 
+   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.5) # error - R not square matrix?
+    
   # rewrite function to split model by taxa and give us the summary
   meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
          taxa_list <- split(data, data$taxo_group)
@@ -517,7 +553,7 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
       type <-  match.arg(type)
 
     if(type == "int"){
-        model_fits <- mapply(function(x, y) fit_int_MLMAmodel_D(x, y), x = taxa_list, y = phylo_vcv)
+        model_fits <- mapply(function(x, y) fit_int_MLMAmodel_D(x, y, D), x = taxa_list, y = phylo_vcv, D = )
     }
 
     if(type == "pers"){
@@ -531,8 +567,8 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
    return(model_fits)
 } 
 
-# intercept models with rho = 0.5
-MLMA_models_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "int")
+# intercept models with rho = 0.5 
+MLMA_models_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "int") # object D is missing??
 
 split_taxa <- split(pers_new, pers_new$taxo_group)
     smd_mods_D <- MLMA_models_D["SMD",]
@@ -540,8 +576,6 @@ split_taxa <- split(pers_new, pers_new$taxo_group)
 
   MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, function(x) print(mod_results(x, mod = "Int")))) 
   MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, function(x) print(mod_results(x, mod = "Int"))))
-  
-# no change at rho = 0.5
   
 # pers models with rho = 0.5
 MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "pers")
