@@ -26,9 +26,9 @@ fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
 }
 
 fit_MLMA_reg_models_personality_trait_SSD_index <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait+SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait+SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
@@ -52,12 +52,48 @@ fit_MLMA_reg_models_parental_care  <- function(data, phylo_vcv){
           			lnCVR = lnCVR))
 }
 
+fit_MLMA_reg_models_personality_trait_age  <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ age -1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ age -1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
+fit_MLMA_reg_models_population <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ population -1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ population -1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
+fit_MLMA_reg_models_environment <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ study_environment -1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ study_environment -1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
+fit_MLMA_reg_models_studytype <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ study_type - 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ study_type - 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
 sensitivity_models <- function(){
   
 }
 
 # This function takes the dataset, splits the dataset up by broad taxonomic group and applies a specified meta-analytic or meta-regression model to each taxa (seee functions for models above), saving the model results into a list that can be used down stream
-meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care")){
+meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care", "age", "pop", "environ", "study_type")){
          taxa_list <- split(data, data$taxo_group)
 
       type <-  match.arg(type)
@@ -82,6 +118,22 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
         model_fits <- mapply(function(x, y) fit_MLMA_reg_models_parental_care(x, y), x = taxa_list, y = phylo_vcv)
     }  
 
+      if(type == "age"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_personality_trait_age(x, y), x = taxa_list, y = phylo_vcv)
+      }    
+     
+      if(type == "pop"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_population(x, y), x = taxa_list, y = phylo_vcv)
+      }  
+      
+      if(type == "environ"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_environment(x, y), x = taxa_list, y = phylo_vcv)
+      }  
+      
+      if(type == "study_type"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_studytype(x, y), x = taxa_list, y = phylo_vcv)
+      }  
+      
    return(model_fits)
 } 
 

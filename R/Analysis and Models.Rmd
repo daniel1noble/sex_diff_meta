@@ -46,12 +46,12 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 
 # Merge spp_names columns
   pers <- merge(x = pers,
-                y = bodysize[,c("species_name", "SSD_index")],
+                y = bodysize[,c("species_name", "SSD_index", "mating_system")],
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, age)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type)
 
 # Check out some outliers
 #  pers_new %>%
@@ -470,43 +470,235 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
                                             test = "t", data = pers_new_invert)  
 ```
 
-# 8. mating system and 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis
+# 8. mating system - retrying this model because I think that this might be an important moderator term to look at sexual selection over natural selection (which I think SSD encompasses both)
 
-# 10. Age
+```{r}
+# remove NAs from data before running the model
+# Exclude NAs
+  pers_new <- pers_new %>%
+              filter(!is.na(mating_system))
+  dim(pers_new) 
+  
+# what have we got to work with - do we need to combine multiple mating systems into 1 category?
+    pers_new %>%
+    group_by(taxo_group, personality_trait, mating_system) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+    
+# combine multiple mating systems into 1 category - multiple mating because most pers levels don't have enough data for comparison with the current split
+
+```
+
+
+# 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis 
+
+## 10. Secondary Models
+These additional models are just looking at a bunch of moderator terms likely to contribute to sex differences (i.e. environment under which the behaviours were studied). 
+
+# 10a. Secondary model 1 - Age
 Also recorded whether individuals were adults or juveniles (not sexually mature). Since we might expect that sex differences in behaviours (particularly behaviours related to mate choice or mating success) would manifest once individuals are sexually mature, it would sprobably be a good idea to see if age moderates sex differences in personalities. Let's have a look at this in a secondary model with age as a moderator:
 
 ```{r}
 # Let's see what we have to work with
 data.frame(pers_new %>%
-group_by(taxo_group, personality_trait, age) %>%
-summarise(N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
-
-# some groups have only 1 effect size or 1 species, we can probably remove those 
-
-# we can modify our mating system model to look at age as a categorical moderator
-
-fit_MLMA_reg_models_personality_trait_age  <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + age, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
-
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + age, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
-
-          return(list(SMD = SMD, 
-          			lnCVR = lnCVR))
-}
+group_by(taxo_group, age) %>%
+summarise(n= n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
 
 # model:
- MLMR_models_pers_age <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+ MLMR_models_pers_age <- meta_model_fits(pers_new, phylo_vcv, type = "age")
 
 # Extract the SMD and lnCVR results
   smd_mods_pers_age <- MLMR_models_pers_age["SMD",]
   lnCVR_mods_pers_age <- MLMR_models_pers_age["lnCVR",]
   
-# these models have adult age as the intercept, probably need to figure out how to swap the levels and compare them
+```
 
+# 10b. Secondary model 2 - Population
+Where the study animal population was from - wild-caught individuals or lab-reared? Might have more of an effect on lnCVR than SMD...
+
+```{r}
+# Let's see what we have to work with
+data.frame(pers_new %>%
+group_by(taxo_group, population) %>%
+summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# model:
+ MLMR_models_pers_pop <- meta_model_fits(pers_new, phylo_vcv, type = "pop")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_pop <- MLMR_models_pers_pop["SMD",]
+  lnCVR_mods_pers_pop <- MLMR_models_pers_pop["lnCVR",]
+  
+# how to swap the levels and compare them???
+```
+
+# 10c. Secondary model 3 - Study Environment
+Does the environment where studies were conducted moderate personality differences between the sexes?
+
+```{r}
+# Let's see what we have to work with
+data.frame(pers_new %>%
+group_by(taxo_group, study_environment) %>%
+summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# model:
+ MLMR_models_pers_environ <- meta_model_fits(pers_new, phylo_vcv, type = "environ")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_enviro <- MLMR_models_pers_environ["SMD",]
+  lnCVR_mods_pers_enviro <- MLMR_models_pers_environ["lnCVR",]
+  
+# how to swap the levels and compare them???
+```
+
+# 10d. Secondary model 4 - Study type
+Does the type of experimental manipulation (observation or manipulation) moderate personality differences between the sexes?
+
+```{r}
+# Let's see what we have to work with
+data.frame(pers_new %>%
+group_by(taxo_group, study_type) %>%
+summarise(N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+    # data is a bit sparse here, so let's just look at how study type moderates personality overall, not within each test
+    # inverts only have experimental observations, so need to exclude inverts from this analysis
+    # because our phylo_vcv matrix is in a list that is hard to drop elements from, let's just run each model individually like we did for SSD interactions
+
+# 1. MAMMALS
+
+# Subset data
+    pers_new_mammal <- as.data.frame(pers_new %>%
+    filter(taxo_group == "mammal"))
+
+  # Check that this has been done correctly
+      pers_new_mammal %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+
+# Extract the phylogenetic correlation matrices
+  phylo_vcv_mammal <- phylo_vcv[[4]] # seems to work better than the crap I just went through
+
+# Run models with just study type as moderator:
+#SMD
+  MLMR_mods_pers_studytype_mammal_SMD <- rma.mv(SMD_yi_flip ~ study_type - 1, V = SMD_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_mammal)
+
+#lnCVR
+MLMR_mods_pers_studytype_mammal_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_mammal)
+
+# 2. BIRDS
+
+  # subset dataset
+  pers_new_bird <- as.data.frame(pers_new %>%
+    filter(taxo_group == "bird"))
+
+  # Check that this has been done correctly
+      pers_new_bird %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
+
+  # phylo_vcv - let's just see if we can use the same tree like with mammals
+  phylo_vcv_bird <- phylo_vcv[[1]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_studytype_bird_SMD <- rma.mv(SMD_yi_flip ~ study_type - 1, V = SMD_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_bird)
+
+#lnCVR
+MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_bird)
+  
+# 3. FISH
+  # subset dataset
+  pers_new_fish <- as.data.frame(pers_new %>%
+  filter(taxo_group == "fish")) 
+    
+  # Check that this has been done correctly
+      pers_new_fish %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+  phylo_vcv_fish <- phylo_vcv[[2]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_studytype_fish_SMD <- rma.mv(SMD_yi_flip ~ study_type -1, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_fish)
+
+#lnCVR
+  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ study_type -1, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_fish)
+
+# 4. Reptiles
+  # subset dataset
+  pers_new_reptile <- as.data.frame(pers_new %>%
+  filter(taxo_group == "reptilia")) 
+    
+  # Check that this has been done correctly
+      pers_new_reptile %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+  phylo_vcv_reptile <- phylo_vcv[[5]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_studytype_rep_SMD <- rma.mv(SMD_yi_flip ~ study_type -1, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_reptile), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_reptile)
+
+#lnCVR
+  MLMR_mods_pers_SSD_rep_lncvr <- rma.mv(CVR_yi ~ study_type -1, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_reptile), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_reptile)
+
+  # subset dataset
+  pers_new_study_type <- as.data.frame(pers_new %>%
+  filter(!taxo_group == "invertebrate")) 
+  
+  # check this has been done correctly
+      pers_new_study_type %>%
+      group_by(taxo_group, personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+  phylo_vcv_study_type <- phylo_vcv[[]]
+  
+  # rerun models
+#SMD
+  MLMR_mods_pers_SSD_invert_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*scale(SSD_index), V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_invert)
+
+#lnCVR
+  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*scale(SSD_index), V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_invert)    
+
+
+# how to swap the levels and compare them???
 ```
 
 
-# 10. TO DO Sensitivity Analyses: 
+# 11. TO DO Sensitivity Analyses: 
 
 1) We need to refit these models accounting for any dependency resulting from the same traits measured on the same animals (likely a big one) and any other shared covariance. Probably this is best added to the residual variance matrix as opposed to the sampling covariance. 
 2) Need to test if there are differences between proportion data; include moderator in a simple model. 
