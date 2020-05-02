@@ -846,7 +846,38 @@ MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.
   lnCVR_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["lnCVR",]    
 ```
 
-# 11. Making plots
+# 12. Publication bias
+We can use: 1) funnel plots to look for asymmetry across all effect sizes for both SMD and lnCVR, 2) Egger's test which performs a regression test on our funnel plots ... but maybe not useful when there is high heterogeneity NOT caused by publication bias (which I think is the case for our data), and 3) trim and fill method to estimate the number of missing effect sizes and uses the asymmetry to add more points and provide a revised overall mean.
+
+see: http://environmentalcomputing.net/meta-analysis-2/ for more information about publication bias methods. 
+```{r}
+# 1. funnel plot for all our effect sizes?
+  # looks for asymmetry in effect sizes - could be due to heterogeneity or publication bias
+    # SMD:
+    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis = "seinv")
+
+    # lnCVR:
+    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+
+# 2. Egger's test - regression test
+  # applies a regression test to the funnel plots to provide a z score and p-value for likelihood of publication bias
+    # SMD:
+    regtest(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, model='rma') #significant, suggests pub. bias z= -2.79, p=0.005
+      
+    # lnCVR:
+    regtest(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, model='rma') #NS z= -0.03, p=0.97
+
+# 3. Trim-and-fill
+  # uses funnel asymmetry to add more points (randomly or in another manner) and provides a revised overall mean for models 
+    # SMD:
+    tf_SMD <- trimfill(smd_mods[1]) # run models seperately for this method I think
+    
+    # lnCVR:
+    tf_lncvr <- trimfill(lnCVR_mods)
+```
+
+
+# 13. Making plots
 ```{r}
 # Use orchard plot package to generate plots for our intercept models:
 # Birds SMD & lnCVR
