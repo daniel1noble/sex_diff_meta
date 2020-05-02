@@ -869,11 +869,7 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
 
 # 3. Trim-and-fill
   # uses funnel asymmetry to add more points (randomly or in another manner) and provides a revised overall mean for models 
-    # SMD:
-    tf_SMD <- trimfill(smd_mods[1]) # run models seperately for this method I think
-    
-    # lnCVR:
-    tf_lncvr <- trimfill(lnCVR_mods)
+    # can I use this method?
 ```
 
 
