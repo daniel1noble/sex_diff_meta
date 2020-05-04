@@ -492,37 +492,17 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
 pers_new %>%
     group_by(taxo_group, mating_system) %>%
     summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
-    # birds only
+    # probably only have enough data for birds 
 
-# let's just run it anyway because we said we would
-# 1. mating system and overall mean differences / variability differences for birds only
+# First let's run the model with mating system and overall personality means/variability just to check
 
-  # subset dataset
-  pers_new_bird <- as.data.frame(pers_new %>%
-    filter(taxo_group == "bird"))
+MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
 
-  # Check that this has been done correctly
-      pers_new_bird %>%
-      group_by(mating_system) %>%
-      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
+# Extract the SMD and lnCVR results
+    smd_mods_mating_system <- MLMR_models_pers_mating_system["SMD",]
+  lnCVR_mods_mating_system <- MLMR_models_pers_mating_system["lnCVR",]
 
-  # phylo_vcv - let's just see if we can use the same tree like with mammals
-  phylo_vcv_bird <- phylo_vcv[[1]]
-  
-  # run the models 
-#SMD
-  MLMR_mods_mate_bird_SMD <- rma.mv(SMD_yi_flip ~ mating_system -1, V = SMD_vi, 
-                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                          R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
-                                          test = "t", data = pers_new_bird)
-
-#lnCVR
-  MLMR_mods_mate_bird_lncvr <- rma.mv(CVR_yi ~ mating_system -1, V = CVR_vi, 
-                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                            R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
-                                            test = "t", data = pers_new_bird)
-  
-# now look at how mating system moderates boldness in birds
+# Second, we can look at how mating system moderates boldness in birds - the one group we have enough data for
    # subset dataset
   pers_new_bird_bold <- as.data.frame(pers_new %>%
     filter(personality_trait == "boldness" & taxo_group == "bird"))
@@ -532,7 +512,8 @@ pers_new %>%
       group_by(mating_system) %>%
       summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
 
-  # use same phylo_vcv_bird as previous model
+  # phylo_vcv - let's just see if we can use the same tree like with mammals
+     phylo_vcv_bird <- phylo_vcv[[1]]
   
   # run the models 
 #SMD
@@ -548,14 +529,13 @@ pers_new %>%
                                             test = "t", data = pers_new_bird_bold)
 ```
 
-
 # 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis 
 
 ## 10. Secondary Models
 These additional models are just looking at a bunch of moderator terms likely to contribute to sex differences (i.e. environment under which the behaviours were studied). 
 
 # 10a. Secondary model 1 - Age
-Also recorded whether individuals were adults or juveniles (not sexually mature). Since we might expect that sex differences in behaviours (particularly behaviours related to mate choice or mating success) would manifest once individuals are sexually mature, it would sprobably be a good idea to see if age moderates sex differences in personalities. Let's have a look at this in a secondary model with age as a moderator:
+Also recorded whether individuals were adults or juveniles (not sexually mature). Since we might expect that sex differences in behaviours (particularly behaviours related to mate choice or mating success) would manifest once individuals are sexually mature, it would probably be a good idea to see if age moderates sex differences in personalities. Let's have a look at this in a secondary model with age as a moderator:
 
 ```{r}
 # Let's see what we have to work with
@@ -871,8 +851,7 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
   # uses funnel asymmetry to add more points (randomly or in another manner) and provides a revised overall mean for models 
     # can I use this method?
 ```
-
-
+ 
 # 13. Making plots
 ```{r}
 # Use orchard plot package to generate plots for our intercept models:
