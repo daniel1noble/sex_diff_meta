@@ -316,6 +316,8 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 # plot SSD distribution in each taxo group for each pers trait to get an idea of spread
   ggplot(pers_new, aes(x=taxo_group, y=SSD_index, fill=personality_trait)) + geom_boxplot()
   
+  # calculate mean SSD for each group?
+
 # flip SSD index so males > females = positive value instead of males < females = positive
 # pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
   

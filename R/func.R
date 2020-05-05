@@ -34,10 +34,10 @@ fit_MLMA_reg_models_personality_trait_SSD_index <- function(data, phylo_vcv){
           			lnCVR = lnCVR))
 }
 
-fit_MLMA_reg_models_personality_trait_mating_system  <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + mating_system, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+fit_MLMA_reg_models_mating_system  <- function(data, phylo_vcv){
+          lnCVR <- metafor::rma.mv(CVR_yi ~ mating_system -1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + mating_system, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ mating_system -1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
@@ -52,7 +52,7 @@ fit_MLMA_reg_models_parental_care  <- function(data, phylo_vcv){
           			lnCVR = lnCVR))
 }
 
-fit_MLMA_reg_models_personality_trait_age  <- function(data, phylo_vcv){
+fit_MLMA_reg_models_age  <- function(data, phylo_vcv){
   lnCVR <- metafor::rma.mv(CVR_yi ~ age -1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
   
   SMD <- metafor::rma.mv(SMD_yi_flip ~ age -1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
@@ -111,7 +111,7 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
     }
 
 	if(type == "pers_mate"){
-        model_fits <- mapply(function(x,y) fit_MLMA_reg_models_personality_trait_mating_system(x, y), x = taxa_list, y = phylo_vcv)
+        model_fits <- mapply(function(x,y) fit_MLMA_reg_models_mating_system(x, y), x = taxa_list, y = phylo_vcv)
     }    
 
     if(type == "parent_care"){
@@ -119,7 +119,7 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
     }  
 
       if(type == "age"){
-        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_personality_trait_age(x, y), x = taxa_list, y = phylo_vcv)
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_age(x, y), x = taxa_list, y = phylo_vcv)
       }    
      
       if(type == "pop"){
