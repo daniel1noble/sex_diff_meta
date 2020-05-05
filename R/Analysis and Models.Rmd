@@ -828,6 +828,59 @@ MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.
   lnCVR_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["lnCVR",]    
 ```
 
+# removing outliers to check model robustness
+```{r}
+# we observed some outliers in the SMD and lnCVR dataset - let's try removing the following and checking the model results:
+# outliers (SMD):
+    # obs 509 (-23 for SMD) - in P015 and is correct/ genuine strong difference
+    # obs 128 (27.87 inverse SE) - in P041: is a score for aggression, but looks correct
+    # obs 120 (also high inverse SE) - in P091: looks correct, females have more variation than males, but same means
+    # obs 41 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
+    # obs 42 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
+    # obs 136 (big SMD, high error?) - in P165: SCORE - big sample size, precise data
+    # obs 121 (no mean diff, small error) - in P041: SCORE - big sample size, big SD
+    # obs 301 (no mean diff, small error) - in P211: exploration time, big sample sizes so high precision?
+    # obs 603 (no mean diff, small error) - in P097 or P157?
+# more SMD outliers
+  # P038 is correct as reported in paper, but is a proportion
+  # P029 has male SD wrong - paper says 64.4 but was recorded as 0.001 for some reason - amended in pers dataset
+  # P017 is correct
+  # P021 looks weird in paper too but is correct
+  # P136 is correct
+  # P014 is correct
+  # P029 male error looks too small
+  # P165 is a boldness score
+  # P015 6 effect sizes are proportions, the rest change direction (check figures though)
+  # P003 both effect sizes are aggression scores
+# outliers (lnCVR):
+    # obs 120 - in P041? - really big sample size, small error (so precise?)
+    # obs 128 - in P041 - aggression SCORE, again big sample size and small error
+    # obs 124 - in P041 - same thing
+    # obs 121 - also in P041
+    # obs 136 - in P165 - score, males and females have the same error from a really big sample size (check this one out)
+
+# let's try just removing all outliers that aren't scores or proportion first since we will be checking those too
+ #pers_new_outliers <- as.data.frame(pers_new %>%
+    #filter(!study_ID == "P029" | !study_ID == "P014" | !study_ID == "P136" | !study_ID == "P021" | !study_ID == "P017" 
+           #| !study_ID == "P015" | !study_ID == "P091" | !study_ID == "P211"))
+dim(pers_new_outliers) # didn't work
+dim(pers_new)
+
+# plot the funnel to see if it looks any better
+funnel(x = pers_new_outliers$SMD_yi, vi = pers_new_outliers$SMD_vi, yaxis="seinv")
+ text(as.character(pers_new_outliers$obs), x = pers_new_outliers$SMD_yi, y = 1/sqrt(pers_new_outliers$SMD_vi), offset = 0.8)
+ # a lot of the outliers are scores and proportions, so we will deal with them later
+ 
+# rerun intercept models first to check
+      MLMR_models_pers_outliers <- meta_model_fits(pers_new_outliers, phylo_vcv, type = "int")
+
+# Extract the SMD and lnCVR results
+    smd_mods_outliers <- MLMR_models_pers_outliers["SMD",]
+  lnCVR_mods_outliers <- MLMR_models_pers_outliers["lnCVR",]
+
+```
+
+
 # 12. Publication bias
 We can use: 1) funnel plots to look for asymmetry across all effect sizes for both SMD and lnCVR, 2) Egger's test which performs a regression test on our funnel plots ... but maybe not useful when there is high heterogeneity NOT caused by publication bias (which I think is the case for our data), and 3) trim and fill method to estimate the number of missing effect sizes and uses the asymmetry to add more points and provide a revised overall mean.
 
