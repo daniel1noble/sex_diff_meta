@@ -762,7 +762,7 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_v
   
   # NOTE: Lauren –Have a look and make sure these matrices are correct. You should see correlations for numbers within studies that match. Usually these are blocks of effects along the diagonal. IF you have ones far away form the signal, then you need to check these. Here is an example with reptiles
     corrplot(D_matrices_0.3[[5]], tl.cex= 0.3) # Reptiles
-    write.csv(D_matrices_0.3[[5]], "reptiles_D.csv") # Can write it and have a closer look too
+    write.csv(D_matrices_0.3[[5]], "reptiles_D_0.3.csv") # Can write it and have a closer look too
 
     #Once happy with the D matrices you can refit models, but just modify as follows:
 
@@ -776,7 +776,7 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_v
                 lnCVR = lnCVR))
 }
 
-   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.5) # error - R not square matrix?
+   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.3) # error - R not square matrix?
     
   # rewrite function to split model by taxa and give us the summary
   meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
