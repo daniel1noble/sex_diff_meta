@@ -768,13 +768,25 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_v
 
     fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
 
-          lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv, obs = D), data = data)
+          lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+            R = list(spp_name_phylo=y, obs = z), 
+            data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.3)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv, obs = D), data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
+              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+              R = list(spp_name_phylo=phylo_vcv, obs = D), 
+              data = data) 
 
           return(list(SMD = SMD, 
                 lnCVR = lnCVR))
 }
+
+ lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+            R = list(spp_name_phylo=phylo_vcv[[5]], obs = D_matrices_0.3[[5]]), 
+            data = split_taxa[[5]])
+
 
    fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.3) # error - R not square matrix?
     
