@@ -41,7 +41,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 ```{r}
 
 # check for differences between pers and bodysize "species names" columns before joining them
-  setdiff(bodysize$species_name, pers$species_name) 
+  #setdiff(bodysize$species_name, pers$species_name) 
       #Archocentrus nigrofasciatus is in body size but not pers - is now Amatitlania nigrofasciata which is it's own entry
 
 # Merge spp_names columns
@@ -316,8 +316,6 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
 # plot SSD distribution in each taxo group for each pers trait to get an idea of spread
   ggplot(pers_new, aes(x=taxo_group, y=SSD_index, fill=personality_trait)) + geom_boxplot()
   
-  # calculate mean SSD for each group?
-
 # flip SSD index so males > females = positive value instead of males < females = positive
 # pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
   
@@ -333,6 +331,8 @@ if(rerun_models == TRUE){
   lnCVR_mods_pers_SSD <- MLMR_models_pers_SSD["lnCVR",]
 
 # NOTE: Lauren you'll need to write a function to extract estimates here as the mod_results from OrchaRd only works with a single categorical moderator. Or, you can manually extract, but I don't recommend.
+  
+  # can use Dan's function here to extract estimates - just have to tweak it a little bit
   
 # A crude way to see no. unique species, no. unique studies and no. SSD values for each taxo group and for each pers trait in these models
 data.frame(pers_new %>%
@@ -406,13 +406,13 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
   
   # rerun models
 #SMD
-  MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ 1- SSD_index, V = SMD_vi, 
+  MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ scale(SSD_index), V = SMD_vi, 
                                           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                           R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
                                           test = "t", data = pers_new_bird)
 
 #lnCVR
-  MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ 1- SSD_index, V = CVR_vi, 
+  MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ scale(SSD_index), V = CVR_vi, 
                                             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                             R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
                                             test = "t", data = pers_new_bird)
@@ -892,7 +892,6 @@ funnel(x = pers_new_outliers$SMD_yi, vi = pers_new_outliers$SMD_vi, yaxis="seinv
 
 ```
 
-
 # 12. Publication bias
 We can use: 1) funnel plots to look for asymmetry across all effect sizes for both SMD and lnCVR, 2) Egger's test which performs a regression test on our funnel plots ... but maybe not useful when there is high heterogeneity NOT caused by publication bias (which I think is the case for our data), and 3) trim and fill method to estimate the number of missing effect sizes and uses the asymmetry to add more points and provide a revised overall mean.
 
@@ -955,5 +954,119 @@ reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab 
 # put them all together!
 bird_SMD + bird_lncvr + fish_SMD + fish_lncvr + invert_SMD + invert_lncvr + mammal_SMD + mammal_lncvr + reptile_SMD + reptile_lncvr
 
+```
+
+# phylogenetic trees for figures
+The plan is to make 5 phylogenetic trees for the 5 broad taxonomic groups and map SSD (male or female-biased), no. effect sizes and the proportion of those effect sizes that go into each of the 5 personality trait categories for each species (spp_name_phylo)
+
+```{r}
+# using ggtree to plot lots of complex data onto phylogenetic trees
+# tree should be circular in shape with spp_name_phylo names at tips, tip node will be red or blue to reflect SSD (NA will be black?). Next, row with total no. effect sizes for each species, with a heatmap following that with 5 different blocks of colour to represent the 5 personality traits (presence/absence)
+
+# see: https://guangchuangyu.github.io/ggtree-book/chapter-ggtree.html for more information about using ggtree
+
+## Steps for successful trees
+
+# step 1) set up dataset so that SSD is either male-biased, female-biased or none (NA) 
+# step 2) make sure each spp name is not duplicated
+# step 3) make a column for each species with n = total effect sizes
+# step 4) make second dataframe with personality trait info for each species in tree (can possibly generate a heat map with no changes)
+# step 5) subset datasets based on taxo group so I can make 5 different trees
+
+``` 
+
+# step 1) set up dataset for basic tree structure
+```{r}
+# set up a new dataframe with spp_name_phylo being a unique row name
+  # Merge spp_names columns like we did initially, but this time bodysize is our x dataset
+  pers_tree <- merge(x = bodysize,
+                y = pers[,c("species_name", "spp_name_phylo", "personality_trait")],
+                by="species_name", all.x=TRUE,  no.dups = TRUE) #duplicates species names, I just want a list of spp_names_phylo
+
+  # since our data is a bit weird (some different species share phylo name in tree due to constraints, so we have 2 different SSD values for them) let's print a list of unique phylo names and input the rest gradually to build a new dataframe for our plots.
+              
+      spp_phylo_list <- list(unique(pers_new$spp_name_phylo))
+      write.csv(spp_phylo_list, "spp_list_figs")
+  
+      # check no. effect sizes for each species in phylogeny     
+  pers_new %>%
+      group_by(taxo_group, spp_name_phylo) %>%
+      summarise(n = n())    
+  
+  # SSD values for each species
+  pers_new %>%
+      group_by(taxo_group, spp_name_phylo, SSD_index)
+              
+  # make SSD a binary category so its either male or female biased for easy visualising
+pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) # male-biased = 1, female-biased = 0
+
+```
+
+# making the tree (birds first)
+
+```{r}
+# setting up the basic tree structure
+  # load dataset and tree, set node colours
+info <- read.csv("info.csv")
+tree <- read.tree("tree.nwk")
+cols <- c(NA ='black', male-biased ='purple2', female-biased ='skyblue2')
+
+ # tree structure (cladogram, circular)
+p <- ggtree(tree, branch.length='none', layout='circular') %<+% info + 
+  geom_tippoint(aes(color=location)) + 
+  scale_color_manual(values=cols) + 
+  geom_tiplab2(aes(label=name), align=T, linetype=NA, 
+              size=2, offset=4, hjust=0.5) +
+  geom_tiplab2(aes(label=year), align=T, linetype=NA, 
+              size=2, offset=8, hjust=0.5)
+```
+ 
+
+# will also need to indicate where species have been substituted 
+```{r}
+# load packages
+pacman::p_load(dplyr, magrittr, ggplot2, patchwork, phylotools, diversitree, phytools)
+
+# rejig dataframe so it has the data we need to plot (i.e. make SSD a binary category so its either male or female biased)
+pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) #male-biased = 1, female-biased = 0
+
+# now we should make a specific dataset for these trees because our data is a bit weird
+  # what we need: species_name, taxo_group, spp_name_phylo, ssd_binary, personality_trait and no. effect sizes (n=length()))
+
+pers_tree_ssd <- pers_new %>% dplyr::select(species_name, spp_name_phylo, taxo_group, SSD_binary, personality_trait)
+
+# need to add a row for no. effect sizes for each species (spp_name_phylo) per personality trait
+ n <- pers_tree_ssd %>%
+      group_by(taxo_group, spp_name_phylo, personality_trait) %>%
+      summarise(n = n())
+
+```
+
+# read in trees seperately?
+```{r}
+bird_tree <- trees[[1]]
+```
+
+# tree 1) categorical data
+```{r}
+#1) your categorical variable 
+# subset dataset
+  pers_bird <- as.data.frame(pers_tree_ssd %>%
+    filter(taxo_group == "bird"))
+
+ssd_bird <- pers_bird %>% dplyr::select(SSD_binary)                                                                                                                                                           
+##) 2) Species name that matches tree tip labels as ROWNAMES of this dataframe
+rownames(ssd_bird) <- unique(pers_bird$spp_name_phylo) #not working
+  # need to sort this out since we have duplicates in the dataset, also some species represented by others
+  # not sure how to resolve this one
+
+# let's try and just make our bird tree first to see what it looks like
+## Plot bird phylogeny as fan
+trait.plot(bird_tree, pers_new$SSD_binary, 
+           cols = list("Sexual size dimorphism" = c("#F2AD00", "#446455")), 
+           cex.lab = 0.01, 
+           legend = T, 
+           w = 4/50,
+           margin = 0)
 ```
 
