@@ -973,16 +973,15 @@ The plan is to make 5 phylogenetic trees for the 5 broad taxonomic groups and ma
 # step 4) make second dataframe with personality trait info for each species in tree (can possibly generate a heat map with no changes)
 # step 5) subset datasets based on taxo group so I can make 5 different trees
 
+# install ggtree using this method:
+source("https://bioconductor.org/biocLite.R")
+BiocManager::install(version = "3.8")
+BiocInstaller::biocLite("ggtree") # won't run 
+
 ``` 
 
 # step 1) set up dataset for basic tree structure
 ```{r}
-# set up a new dataframe with spp_name_phylo being a unique row name
-  # Merge spp_names columns like we did initially, but this time bodysize is our x dataset
-  pers_tree <- merge(x = bodysize,
-                y = pers[,c("species_name", "spp_name_phylo", "personality_trait")],
-                by="species_name", all.x=TRUE,  no.dups = TRUE) #duplicates species names, I just want a list of spp_names_phylo
-
   # since our data is a bit weird (some different species share phylo name in tree due to constraints, so we have 2 different SSD values for them) let's print a list of unique phylo names and input the rest gradually to build a new dataframe for our plots.
               
       spp_phylo_list <- list(unique(pers_new$spp_name_phylo))
@@ -990,15 +989,18 @@ The plan is to make 5 phylogenetic trees for the 5 broad taxonomic groups and ma
   
       # check no. effect sizes for each species in phylogeny     
   pers_new %>%
-      group_by(taxo_group, spp_name_phylo) %>%
+      group_by(spp_name_phylo, personality_trait) %>%
       summarise(n = n())    
   
-  # SSD values for each species
-  pers_new %>%
-      group_by(taxo_group, spp_name_phylo, SSD_index)
-              
+  ## data is in figs_data.csv file for easy figure-making!
+  figs_data <- read.csv("./data/figs_data.csv", stringsAsFactors = FALSE)
+  
+  # subset dataset to just have birds for now
+ bird_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "bird"))
+  
   # make SSD a binary category so its either male or female biased for easy visualising
-pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) # male-biased = 1, female-biased = 0
+#pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) # male-biased = 1, female-biased = 0
 
 ```
 
@@ -1006,19 +1008,45 @@ pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) # male-biased = 1, fem
 
 ```{r}
 # setting up the basic tree structure
-  # load dataset and tree, set node colours
-info <- read.csv("info.csv")
-tree <- read.tree("tree.nwk")
-cols <- c(NA ='black', male-biased ='purple2', female-biased ='skyblue2')
+  # load tree, set node colours
+birdtree <- pruned_trees[1] # need to prune tree to match species in dataset
+  
+# Check that all names in the phylogeny are also in the data
+      taxa_data_list <- split(pers_new, pers_new$taxo_group)
+      
+      other_groups <- mapply(x = taxa_data_list, 
+                             y = trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+
+          #Print out each taxon group
+      for(i in colnames(other_groups)){
+            print(i)
+            print(other_groups[,i] )
+      }
+      
+
+      # Now we are ready to prune trees so that we get tree names match with species in data
+      pruned_trees <- mapply(x = taxa_data_list, 
+                             y = trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
+
+  # set colours for nodes (we are using SSD as our basis for colour: female-biased = red, male-biased = blue)      
+cols <- c("red3", "white","deepskyblue2") #can I make this continuous?
 
  # tree structure (cladogram, circular)
-p <- ggtree(tree, branch.length='none', layout='circular') %<+% info + 
-  geom_tippoint(aes(color=location)) + 
+p <- ggtree(birdtree, branch.length='none', layout='circular') %<+% bird_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
   scale_color_manual(values=cols) + 
-  geom_tiplab2(aes(label=name), align=T, linetype=NA, 
+  geom_tiplab2(aes(label=spp_name_phylo), align=T, linetype=NA, 
               size=2, offset=4, hjust=0.5) +
-  geom_tiplab2(aes(label=year), align=T, linetype=NA, 
+  geom_tiplab2(aes(label=total_effects), align=T, linetype=NA, 
               size=2, offset=8, hjust=0.5)
+
+#Personalising the colour gradient, ignore if you want default rainbow
+length(init.tree$cols)
+
+#Setting the colours
+init.tree$cols[1:1001]<-colorRampPalette(colors=c("red3", "white","deepskyblue2"), space="Lab")(1001) #Red to blue
 ```
  
 
