@@ -55,7 +55,7 @@ species_no,species_name,taxo_group,m_BS,m_SE,f_BS,f_SE,error type,measure,measur
 54,Cherax destructor,invertebrate,109.87,6.8,112.21,5.9,SE,length,body length (mm),-0.021,0.009,2,multiple mating,maternal
 55,Chlamydotis undulata,bird,1960,NA,1150,NA,NA,mass,body mass (g),0.704,-0.232,2,multiple mating,maternal
 56,Chlorocebus pygerythrus,mammal,413,NA,257,NA,NA,mass,body mass (g),0.607,-0.206,2,multiple mating,biparental
-57,Columba palumbus,bird,250.93,7.2,248.25,6.5,SD,partial.length,wing length (mm),,,0,monogamy,biparental
+57,Columba palumbus,bird,250.93,7.2,248.25,6.5,SD,partial.length,wing length (mm),0.011,,0,monogamy,biparental
 58,Copsychus saularis,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
 59,Corcorax melanorhamphos,bird,381.54,29.28,372.89,37.32,SD,mass,body mass (g),0.023,-0.01,2,monogamy,cooperative
 60,Coturnix japonica,bird,106.8,26.6,134.3,14.3,NA,mass,body mass (g),-0.205,0.1,2,multiple mating,biparental
@@ -158,7 +158,7 @@ species_no,species_name,taxo_group,m_BS,m_SE,f_BS,f_SE,error type,measure,measur
 157,Passer montanus,bird,53.969,3.281,52.58,3.104,SD,partial.length,wing length (mm),0.026,-0.011,2,monogamy,biparental
 158,Pelvicachromis pulcher,fish,46,1,38,1,SE,length,standard length (mm),0.211,-0.083,2,monogamy,biparental
 159,Perdix perdix,bird,399.1,25.1,390,37.8,SD,mass,body mass (g),0.023,-0.01,2,monogamy,maternal
-160,Pericrocotus flammeus,bird,90.5,,86.5,,NA,partial.length,wing length (mm),,,0,multiple mating,maternal
+160,Pericrocotus flammeus,bird,90.5,,86.5,,NA,partial.length,wing length (mm),0.046,,0,multiple mating,maternal
 161,Pericrocotus solaris,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
 162,Peromyscus californicus,mammal,44.36,2.1,44.39,1.56,,mass,body mass (g),-0.001,0,2,monogamy,biparental
 163,Peromyscus maniculatus,mammal,17.04,0.24,16.76,0.33,,mass,body mass (g),0.017,-0.007,2,multiple mating,maternal
