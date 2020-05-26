@@ -406,13 +406,13 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
   
   # rerun models
 #SMD
-  MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ scale(SSD_index), V = SMD_vi, 
+  MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
                                           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                           R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
                                           test = "t", data = pers_new_bird)
 
 #lnCVR
-  MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ scale(SSD_index), V = CVR_vi, 
+  MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
                                             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                             R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
                                             test = "t", data = pers_new_bird)
@@ -975,8 +975,8 @@ The plan is to make 5 phylogenetic trees for the 5 broad taxonomic groups and ma
 
 # install ggtree using this method:
 source("https://bioconductor.org/biocLite.R")
-BiocManager::install(version = "3.8")
-BiocInstaller::biocLite("ggtree") # won't run 
+BiocManager::install("ggtree")
+BiocInstaller::biocLite("ggtree") 
 
 ``` 
 
@@ -998,6 +998,8 @@ BiocInstaller::biocLite("ggtree") # won't run
   # subset dataset to just have birds for now
  bird_data <- as.data.frame(figs_data %>%
     filter(taxo_group == "bird"))
+ 
+ row.names(bird_data) <- bird_data$spp_name_phylo 
   
   # make SSD a binary category so its either male or female biased for easy visualising
 #pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) # male-biased = 1, female-biased = 0
@@ -1009,92 +1011,270 @@ BiocInstaller::biocLite("ggtree") # won't run
 ```{r}
 # setting up the basic tree structure
   # load tree, set node colours
-birdtree <- pruned_trees[1] # need to prune tree to match species in dataset
-  
-# Check that all names in the phylogeny are also in the data
-      taxa_data_list <- split(pers_new, pers_new$taxo_group)
-      
-      other_groups <- mapply(x = taxa_data_list, 
-                             y = trees, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+birdtree <- read.tree("./trees/bird_species.nwk")
 
-          #Print out each taxon group
-      for(i in colnames(other_groups)){
-            print(i)
-            print(other_groups[,i] )
-      }
-      
+# prune tree to get rid of species we no longer have data for
+pruned.birdtree <- drop.tip(birdtree, setdiff(birdtree$tip.label, bird_data$spp_name_phylo)) 
 
-      # Now we are ready to prune trees so that we get tree names match with species in data
-      pruned_trees <- mapply(x = taxa_data_list, 
-                             y = trees, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
+# define objects for the plot
+species <- pruned.birdtree$tip.label
 
-  # set colours for nodes (we are using SSD as our basis for colour: female-biased = red, male-biased = blue)      
-cols <- c("red3", "white","deepskyblue2") #can I make this continuous?
+rownames(bird_data) <- pruned.birdtree$tip.label
 
  # tree structure (cladogram, circular)
-p <- ggtree(birdtree, branch.length='none', layout='circular') %<+% bird_data + 
+p <- ggtree(pruned.birdtree, branch.length='none', layout='circular') %<+% bird_data + 
   geom_tippoint(aes(color=SSD_index)) + 
-  scale_color_manual(values=cols) + 
-  geom_tiplab2(aes(label=spp_name_phylo), align=T, linetype=NA, 
-              size=2, offset=4, hjust=0.5) +
-  geom_tiplab2(aes(label=total_effects), align=T, linetype=NA, 
-              size=2, offset=8, hjust=0.5)
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=10, hjust=0.5) 
 
-#Personalising the colour gradient, ignore if you want default rainbow
-length(init.tree$cols)
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+# birds
 
-#Setting the colours
-init.tree$cols[1:1001]<-colorRampPalette(colors=c("red3", "white","deepskyblue2"), space="Lab")(1001) #Red to blue
+    # subset dataset
+  pers_bird <- as.data.frame(pers_new %>%
+  filter(taxo_group == "bird")) 
+  
+  # make this a matrix-style dataframe
+      pers_bird <- data.frame(pers_bird %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_bird <- data.frame(pers_bird %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_bird) <- pers_bird$spp_name_phylo 
+    
+    pers_bird <- pers_bird[,2:6]
+
+  # matrix    
+    birds_matrix <- data.matrix(pers_bird) #yay!
+    
+  # add the heatmap data to our plot
+gheatmap(p, birds_matrix, offset = 18, 
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=90, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8)
+ 
+# need to include legend titles (ssd index for nodes, n effect sizes for pers traits heat map) 
+  # will also need to indicate where species have been substituted** important
+
+# ideally, the colours of the pers trait heatmap would match the colours in the orchard plots for easy visualisation 
 ```
  
+# mammals
 
-# will also need to indicate where species have been substituted 
 ```{r}
-# load packages
-pacman::p_load(dplyr, magrittr, ggplot2, patchwork, phylotools, diversitree, phytools)
+# subset dataset to include only mammals
+ mammal_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "mammal"))
+ 
+ row.names(mammal_data) <- mammal_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+mammaltree <- read.tree("./trees/mammal_species.nwk")
 
-# rejig dataframe so it has the data we need to plot (i.e. make SSD a binary category so its either male or female biased)
-pers_new$SSD_binary <- ifelse(pers_new$SSD_index>0, 1, 0) #male-biased = 1, female-biased = 0
+# prune tree to get rid of species we no longer have data for
+pruned.mammaltree <- drop.tip(mammaltree, setdiff(mammaltree$tip.label, mammal_data$spp_name_phylo)) 
 
-# now we should make a specific dataset for these trees because our data is a bit weird
-  # what we need: species_name, taxo_group, spp_name_phylo, ssd_binary, personality_trait and no. effect sizes (n=length()))
+# set rownames for labelling tips
+rownames(mammal_data) <- pruned.mammaltree$tip.label
 
-pers_tree_ssd <- pers_new %>% dplyr::select(species_name, spp_name_phylo, taxo_group, SSD_binary, personality_trait)
+ # tree structure (cladogram, circular)
+p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% mammal_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) 
 
-# need to add a row for no. effect sizes for each species (spp_name_phylo) per personality trait
- n <- pers_tree_ssd %>%
-      group_by(taxo_group, spp_name_phylo, personality_trait) %>%
-      summarise(n = n())
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_mammal <- as.data.frame(pers_new %>%
+  filter(taxo_group == "mammal")) 
+  
+  # make this a matrix-style dataframe
+      pers_mammal <- data.frame(pers_mammal %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_mammal <- data.frame(pers_mammal %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_mammal) <- pers_mammal$spp_name_phylo 
+    
+    pers_mammal <- pers_mammal[,2:6]
 
+  # matrix    
+    mammal_matrix <- data.matrix(pers_mammal) #yay!
+    
+  # add the heatmap data to our plot
+gheatmap(p2, mammal_matrix, offset = 13, 
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=90, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8) 
 ```
 
-# read in trees seperately?
+# reptilia
 ```{r}
-bird_tree <- trees[[1]]
+# subset dataset to include only reptiles
+ rep_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "reptilia"))
+ 
+ row.names(rep_data) <- rep_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+reptree <- read.tree("./trees/reptile_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.reptree <- drop.tip(reptree, setdiff(reptree$tip.label, rep_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(rep_data) <- pruned.reptree$tip.label
+
+ # tree structure (cladogram, circular)
+p3 <- ggtree(pruned.reptree, layout='fan', open.angle=120) %<+% rep_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0) # fan shape because we only have 10 species
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_rep <- as.data.frame(pers_new %>%
+  filter(taxo_group == "reptilia")) 
+  
+  # make this a matrix-style dataframe
+      pers_rep <- data.frame(pers_rep %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_rep <- data.frame(pers_rep %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_rep) <- pers_rep$spp_name_phylo 
+    
+    pers_rep <- pers_rep[,2:6]
+
+  # matrix    
+    rep_matrix <- data.matrix(pers_rep) 
+    
+  # add the heatmap data to our plot
+gheatmap(p3, rep_matrix, offset = 20, width = 1,
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=90, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8) #just not aligning properly 
 ```
 
-# tree 1) categorical data
+# fish
+
 ```{r}
-#1) your categorical variable 
-# subset dataset
-  pers_bird <- as.data.frame(pers_tree_ssd %>%
-    filter(taxo_group == "bird"))
+# subset dataset to include only fish
+ fish_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "fish"))
+ 
+ row.names(fish_data) <- fish_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+fishtree <- read.tree("./trees/fish_species.nwk")
 
-ssd_bird <- pers_bird %>% dplyr::select(SSD_binary)                                                                                                                                                           
-##) 2) Species name that matches tree tip labels as ROWNAMES of this dataframe
-rownames(ssd_bird) <- unique(pers_bird$spp_name_phylo) #not working
-  # need to sort this out since we have duplicates in the dataset, also some species represented by others
-  # not sure how to resolve this one
+# prune tree to get rid of species we no longer have data for
+pruned.fishtree <- drop.tip(fishtree, setdiff(fishtree$tip.label, fish_data$spp_name_phylo)) 
 
-# let's try and just make our bird tree first to see what it looks like
-## Plot bird phylogeny as fan
-trait.plot(bird_tree, pers_new$SSD_binary, 
-           cols = list("Sexual size dimorphism" = c("#F2AD00", "#446455")), 
-           cex.lab = 0.01, 
-           legend = T, 
-           w = 4/50,
-           margin = 0)
+# set rownames for labelling tips
+rownames(fish_data) <- pruned.fishtree$tip.label
+
+ # tree structure (cladogram, circular)
+p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) 
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_fish <- as.data.frame(pers_new %>%
+  filter(taxo_group == "fish")) 
+  
+  # make this a matrix-style dataframe
+      pers_fish <- data.frame(pers_fish %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_fish <- data.frame(pers_fish %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_fish) <- pers_fish$spp_name_phylo 
+    
+    pers_fish <- pers_fish[,2:6]
+
+  # matrix    
+    fish_matrix <- data.matrix(pers_fish) 
+    
+  # add the heatmap data to our plot
+gheatmap(p4, fish_matrix, offset = 13, 
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=90, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8) 
 ```
 
+# inverts
+
+```{r}
+# subset dataset to include only inverts
+  invert_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "invertebrate"))
+ 
+ row.names(invert_data) <- invert_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+inverttree <- read.tree("./trees/invert_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.inverttree <- drop.tip(inverttree, setdiff(inverttree$tip.label, invert_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(invert_data) <- pruned.inverttree$tip.label
+
+ # tree structure (cladogram, circular)
+p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% invert_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=7, hjust=0.5) 
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_invert <- as.data.frame(pers_new %>%
+  filter(taxo_group == "invertebrate")) 
+  
+  # make this a matrix-style dataframe
+      pers_invert <- data.frame(pers_invert %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_invert <- data.frame(pers_invert %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_invert) <- pers_invert$spp_name_phylo 
+    
+    pers_invert <- pers_invert[,2:6]
+
+  # matrix    
+    invert_matrix <- data.matrix(pers_invert) 
+    
+  # add the heatmap data to our plot
+gheatmap(p5, invert_matrix, offset = 12, 
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=90, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8) 
+```
+
+# DONE!
