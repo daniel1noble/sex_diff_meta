@@ -927,29 +927,29 @@ orchard_plot(lnCVR_mods[[1]], mod = "Int", xlab = "log Coefficient of Variance (
 
 # for plotting categorical moderators, like personality traits:
 # Bird lnCVR
-bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
 # Fish lnCVR
-fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
 # Invert lnCVR
-invert_lncvr<- orchard_plot(lnCVR_mods_pers[[3]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+invert_lncvr<- orchard_plot(lnCVR_mods_pers[[3]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
 # Mammal lnCVR
-mammal_lncvr <- orchard_plot(lnCVR_mods_pers[[4]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+mammal_lncvr <- orchard_plot(lnCVR_mods_pers[[4]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
 # Reptile lnCVR
-reptile_lncvr <- orchard_plot(lnCVR_mods_pers[[5]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", alpha = 0.5, transfm = "none")
+reptile_lncvr <- orchard_plot(lnCVR_mods_pers[[5]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
 
 # try wrapping them using patchwork
 
 # personality SMD
 # Bird SMD
-bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
 # Fish lnCVR
-fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
 # Invert lnCVR
-invert_SMD<- orchard_plot(smd_mods_pers[[3]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+invert_SMD<- orchard_plot(smd_mods_pers[[3]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
 # Mammal lnCVR
-mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
 # Reptile lnCVR
-reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab = "Standardised mean difference", alpha = 0.5, transfm = "none")
+reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
 
 # put them all together!
 bird_SMD + bird_lncvr + fish_SMD + fish_lncvr + invert_SMD + invert_lncvr + mammal_SMD + mammal_lncvr + reptile_SMD + reptile_lncvr
@@ -1086,7 +1086,8 @@ rownames(mammal_data) <- pruned.mammaltree$tip.label
 p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% mammal_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) +
+  theme(legend.position = 'right')
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
     # subset dataset
@@ -1112,7 +1113,7 @@ p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% ma
 gheatmap(p2, mammal_matrix, offset = 13, 
          low = "white", high = "mediumseagreen", color=NULL, 
          colnames_position="bottom", 
-         colnames_angle=90, colnames_offset_y = 1, 
+         colnames_angle=85, colnames_offset_y = 1, 
          hjust=0, font.size=2.8) 
 ```
 
@@ -1193,7 +1194,8 @@ rownames(fish_data) <- pruned.fishtree$tip.label
 p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) +
+  theme(legend.position = "right")
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
     # subset dataset
@@ -1219,8 +1221,8 @@ p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish
 gheatmap(p4, fish_matrix, offset = 13, 
          low = "white", high = "mediumseagreen", color=NULL, 
          colnames_position="bottom", 
-         colnames_angle=90, colnames_offset_y = 1, 
-         hjust=0, font.size=2.8) 
+         colnames_angle=45, colnames_offset_y = 1, 
+         hjust=0.5, font.size=2.8) 
 ```
 
 # inverts
@@ -1247,7 +1249,8 @@ rownames(invert_data) <- pruned.inverttree$tip.label
 p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% invert_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=7, hjust=0.5) 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=7, hjust=0.5) +
+  theme(legend.position = "right")
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
     # subset dataset
@@ -1272,9 +1275,19 @@ p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% in
   # add the heatmap data to our plot
 gheatmap(p5, invert_matrix, offset = 12, 
          low = "white", high = "mediumseagreen", color=NULL, 
-         colnames_position="bottom", 
-         colnames_angle=90, colnames_offset_y = 1, 
-         hjust=0, font.size=2.8) 
+         colnames_position="top", 
+         colnames_angle=45, colnames_offset_y = 1, 
+         hjust=0, font.size=2.8)
+```
+
+# patching figures together - trying ggarrange and patchwork to see which works best
+
+```{r}
+# packages to use: ggarrange, patchwork, ggpubr (uses ggarrange function)
+
+
+# set plot window size 
+dev.new(width=7,height=5.5,noRStudioGD = TRUE) #this is in inches, I think you can change it to pixels but not cms?
 ```
 
 # DONE!
