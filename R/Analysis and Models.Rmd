@@ -472,6 +472,128 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
                                             test = "t", data = pers_new_invert)  
 ```
 
+# using Dan's code to extract estimates from SSD models
+```{r}
+# define some things first
+model = MLMR_models_pers_SSD
+mod_cat = "personality_trait"
+mod_cont = "SSD_index"
+
+# Get prediction intervals for a single categorical variable when controlling for continuous variables in a model.
+get_pred_est_cont <- function (model, mod_cat, mod_cont, type = c("mean", "zero")) {
+	type = match.arg(type)
+	# Categorical moderator
+		     pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+	    name_cat <- row.names(model$beta)[pos]
+	    name_cat <- as.character(stringr::str_replace(name_cat, {{mod_cat}}, ""))
+	  name_clean <- firstup(name_cat)
+	         len <- length(name_clean)
+
+	# Continuous moderators
+		  len_cont <- length(mod_cont)
+
+		  if(type == "mean"){
+			  if(len_cont == 1){  	
+			  	means_cont <- mean(model$X[,mod_cont])
+			  	names(means_cont) <- mod_cont
+			  }
+			  if(len_cont > 1){
+				means_cont <- colMeans(model$X[,mod_cont])
+			  }
+		}
+
+		if(type == "zero"){
+			if(len_cont == 1){  	
+			  	means_cont <- 0
+			  	names(means_cont) <- mod_cont
+			  }
+			  if(len_cont > 1){
+				means_cont <- rep(0, len_cont)
+				names(means_cont) <- mod_cont
+			  }
+		}
+
+	# Get prediction intervals
+		newdata <- matrix(0, ncol = len+len_cont, nrow = len)
+		diag(newdata[c(1:len),c(1:len)]) <- 1
+		newdata[,c((len+1):(len+len_cont))] <- means_cont
+		
+		for(i in 1:len){
+			newdata[i,c((len+1):(len+len_cont))] <-  means_cont
+		}
+
+		colnames(newdata) <- c(name_cat, names(means_cont))
+
+	     pred <- metafor::predict.rma(model, newmods = newdata)
+
+	 estimate <- pred$pred
+	  lowerCL <- pred$ci.lb 
+	  upperCL <- pred$ci.ub
+	  lowerPR <- pred$cr.lb
+	  upperPR <- pred$cr.ub 
+	  
+	  table <- tibble::tibble(name = name_clean, estimate = estimate, lowerCL = lowerCL, upperCL = upperCL, lowerPR = lowerPR, upperPR = upperPR)
+	  return(table)
+}
+
+get_pred_est_cont(MLMR_models_pers_SSD, pers_new$personality_trait, pers_new$SSD_index) # not working - doesn't recognise personality_trait???
+
+get_data_cont <- function(model, mod_cat){
+       
+     pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+	    names <- row.names(model$beta)[pos]
+	    name_cat <- as.character(stringr::str_replace(names, {{mod_cat}}, ""))
+
+	    X <- as.data.frame(model$X)[,names]
+
+	  moderator <- matrix(ncol = 1, nrow = dim(X)[1])
+
+	  for(i in 1:ncol(X)){
+	      moderator <- ifelse(X[,i] == 1, name_cat[i], moderator)
+	  }
+	    moderator <- firstup(moderator)
+	    yi <- model$yi
+	    vi <- model$vi
+	  type <- attr(model$yi, "measure")
+
+		data <- data.frame(yi, vi, moderator, type)
+		return(data)
+
+}
+
+mod_results_new <- function(model, mod_cat, mod_cont, type = c("mean", "zero")) { 
+
+	type = match.arg(type)
+
+	if(all(class(model) %in% c("rma.mv", "rma")) == FALSE) {stop("Sorry, you need to fit a metafor model of class rma.mv or rma")}
+
+  data <- get_data_cont(model, mod_cat)
+
+  if(length(mod_cont) == 0){
+	# Get confidence intervals
+	CI <- get_est(model, mod_cat)
+
+	# Get prediction intervals
+	PI <- get_pred(model, mod_cat)
+
+	model_results <- list(mod_table = cbind(CI, PI[,-1]), data = data)
+	}
+
+	if(length(mod_cont) >= 1){
+		ests <- get_pred_est_cont(model, mod_cat, mod_cont, type)
+		model_results <- list(mod_table = ests, data = data)	
+	}
+
+	class(model_results) <- "orchard"
+
+	return(model_results)
+
+}
+
+#test <- mod_results(model5_RR, mod_cat = "order", mod_cont = c("mean_t", "delta_t", "Q10"))
+#print(test)
+```
+
 # 8. mating system - retrying this model because I think that this might be an important moderator term to look at sexual selection over natural selection (which I think SSD encompasses both)
 
 ```{r}
@@ -766,29 +888,48 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type - 1, V = CVR_v
 
     #Once happy with the D matrices you can refit models, but just modify as follows:
 
+  # Intercept models
     fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
 
           lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
             R = list(spp_name_phylo=y, obs = z), 
-            data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.3)
+            data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
+            SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
               random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-              R = list(spp_name_phylo=phylo_vcv, obs = D), 
-              data = data) 
+              R = list(spp_name_phylo=y, obs = z), 
+              data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8) 
 
           return(list(SMD = SMD, 
                 lnCVR = lnCVR))
 }
 
- lnCVR <- metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
+   
+# Intercept models
+   # break these up for each taxo group
+    birds_fit_pers_trait_MLMAmodel_D <- function(data, phylo_vcv, D){
+
+          lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, 
             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-            R = list(spp_name_phylo=phylo_vcv[[5]], obs = D_matrices_0.3[[5]]), 
-            data = split_taxa[[5]])
+            R = list(spp_name_phylo=y, obs = z), 
+            data = x), x = pers_new_bird, y = phylo_vcv, z = D_matrices_0.8)
 
+            SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
+              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+              R = list(spp_name_phylo=y, obs = z), 
+              data = x), x = pers_new_bird, y = phylo_vcv, z = D_matrices_0.8) 
 
-   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.3) # error - R not square matrix?
+          return(list(SMD = SMD, 
+                lnCVR = lnCVR))
+}   
+    
+  birds_fit_pers_trait_MLMAmodel_D(pers_new_bird, phylo_vcv[1], D_matrices_0.8[1]) #error
+ 
+   split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_pers_mods_D <- fit_pers_trait_MLMAmodel_D["SMD",]
+  lnCVR_pers_mods_D <- fit_pers_trait_MLMAmodel_D["lnCVR",]  
     
   # rewrite function to split model by taxa and give us the summary
   meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
