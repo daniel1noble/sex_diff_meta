@@ -1035,13 +1035,17 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
     funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
 
 # 2. Egger's test - regression test
-  # applies a regression test to the funnel plots to provide a z score and p-value for likelihood of publication bias
+      # applies a regression test to the funnel plots to provide a z score and p-value for likelihood of publication bias
     # SMD:
     regtest(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, model='rma') #significant, suggests pub. bias z= -2.79, p=0.005
       
     # lnCVR:
     regtest(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, model='rma') #NS z= -0.03, p=0.97
-
+    
+  # looking at model residuals for our intercept models
+# SMD
+    #coef(smd_mods) doesn't give us anything - might have to run models another way?
+    
 # 3. Trim-and-fill
   # uses funnel asymmetry to add more points (randomly or in another manner) and provides a revised overall mean for models 
     # can I use this method?
