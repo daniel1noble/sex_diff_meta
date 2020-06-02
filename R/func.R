@@ -88,12 +88,26 @@ fit_MLMA_reg_models_studytype <- function(data, phylo_vcv){
               lnCVR = lnCVR))
 }
 
-sensitivity_models <- function(){
+sensitivity_mod1 <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ score, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
   
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ score, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
+sensitivity_mod2 <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ proportion, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ proportion, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
 }
 
 # This function takes the dataset, splits the dataset up by broad taxonomic group and applies a specified meta-analytic or meta-regression model to each taxa (seee functions for models above), saving the model results into a list that can be used down stream
-meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care", "age", "pop", "environ", "study_type")){
+meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care", "age", "pop", "environ", "study_type", "score", "proportion")){
          taxa_list <- split(data, data$taxo_group)
 
       type <-  match.arg(type)
@@ -133,6 +147,14 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
       if(type == "study_type"){
         model_fits <- mapply(function(x, y) fit_MLMA_reg_models_studytype(x, y), x = taxa_list, y = phylo_vcv)
       }  
+      
+      if(type == "score"){
+        model_fits <- mapply(function(x, y) sensitivity_mod1(x, y), x = taxa_list, y = phylo_vcv)
+      } 
+      
+      if(type == "proportion"){
+        model_fits <- mapply(function(x, y) sensitivity_mod2(x, y), x = taxa_list, y = phylo_vcv)
+      } 
       
    return(model_fits)
 } 

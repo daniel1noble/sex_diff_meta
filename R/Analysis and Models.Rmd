@@ -51,7 +51,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, score, proportion)
 
 # Check out some outliers
 #  pers_new %>%
@@ -967,6 +967,58 @@ MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.
  # Extract the SMD and lnCVR results
     smd_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["SMD",]
   lnCVR_mods_pers_SSD_D <- MLMR_models_pers_SSD_D["lnCVR",]    
+```
+
+# Sensitivity analyses
+
+Here we are adding a moderator term for data that are a) scores, and b) proportions to see if they significantly influence the means of our intercept and pers traits models
+```{r}
+# ifelse statement for our two columns to make data into binary categories
+# scores
+pers_new$score <- ifelse(is.na(pers_new$score), 0, 1)
+
+    pers_new$score <- ifelse(pers_new$score == 1, "score", "other")
+
+# proportions    
+pers_new$proportion <- ifelse(is.na(pers_new$proportion), 0, 1)
+
+    pers_new$proportion <- ifelse(pers_new$proportion == 1, "proportion", "other")
+    
+# running simple models first
+  # scores
+  data.frame(pers_new %>%
+  group_by(taxo_group, score) %>%
+  summarise(n = n()))
+  
+    # model:
+ sensitivity_mod1_score <- meta_model_fits(pers_new, phylo_vcv, type = "score")
+
+    # Extract the SMD and lnCVR results
+  smd_mods_score <- sensitivity_mod1_score["SMD",] #inverts significant :(
+  lnCVR_mods_score <- sensitivity_mod1_score["lnCVR",] #inverts significant
+  
+  # same direction but more significant for invert SMD and lnCVR
+  
+  # proportions
+  data.frame(pers_new %>%
+  group_by(taxo_group, proportion) %>%
+  summarise(n = n())) 
+  
+  # no reptiles with proportional data, drop those
+    pers_new_prop <- as.data.frame(pers_new %>%
+  filter(!taxo_group == "reptilia")) 
+    
+    phylo_vcv_prop <- phylo_vcv[-5]
+  
+    # model:
+ sensitivity_mod2_prop <- meta_model_fits(pers_new_prop, phylo_vcv_prop, type = "proportion")
+ 
+    # Extract the SMD and lnCVR results
+  smd_mods_prop <- sensitivity_mod2_prop["SMD",] 
+  lnCVR_mods_prop <- sensitivity_mod2_prop["lnCVR",] 
+
+  # fish and inverts have significantly different effect sizes for proportional data than other data (same direction for fish and invert SMD, opposite direction for invert lnCVR)
+
 ```
 
 # removing outliers to check model robustness
