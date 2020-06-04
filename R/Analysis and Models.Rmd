@@ -328,7 +328,7 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
   
 # flip SSD index so males > females = positive value instead of males < females = positive
 # pers_new$SSD_index_flip <- pers_new$SSD_index*(-1) - this makes females the positive value when larger, so ignore this
-  
+  rerun_models = FALSE
 if(rerun_models == TRUE){
       MLMR_models_pers_SSD <- meta_model_fits(pers_new, phylo_vcv, type = "pers_SSD")
       saveRDS(MLMR_models_pers_SSD, "./output/MLMR_models_pers_SSD")
@@ -339,6 +339,10 @@ if(rerun_models == TRUE){
 # Extract the SMD and lnCVR results
     smd_mods_pers_SSD <- MLMR_models_pers_SSD["SMD",]
   lnCVR_mods_pers_SSD <- MLMR_models_pers_SSD["lnCVR",]
+
+# Get the combined estimates from them all
+   MLMA_estimates_SMD_SSD <- plyr::ldply(lapply(smd_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
+ MLMA_estimates_lnCVR_SSD <- plyr::ldply(lapply(lnCVR_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
 
 # NOTE: Lauren you'll need to write a function to extract estimates here as the mod_results from OrchaRd only works with a single categorical moderator. Or, you can manually extract, but I don't recommend.
   
@@ -782,7 +786,9 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
                 lnCVR = lnCVR))
 }
 
-   fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
+   ob <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
+
+   
    
 # Intercept models
    # break these up for each taxo group
