@@ -32,6 +32,11 @@ rerun_models = FALSE
 
 # 2. Load datasets
 ```{r}
+# read in pers_new.csv ready to go
+  pers_new <- read.csv("./data/pers_new.csv", stringsAsFactors = FALSE)
+
+# OR
+# load and work through original datasets
     pers <- read.csv("./data/pers_data.csv", stringsAsFactors = FALSE)
 bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 
@@ -174,7 +179,13 @@ The directional meaning of effect sizes vary depending on the specific units and
 
       pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
 ```
-# Prepare the phylogenic trees
+
+Save pers_new dataset so it's ready to go
+```{r}
+write.csv(pers_new, file = "pers_new.csv", row.names = FALSE)
+```
+
+# Prepare the phylogenetic trees
 For each taxonomic group the phylogenetic trees have been constructed. We'll use these trees for multi-level meta-analytic models throughout. 
 
 ```{r}
@@ -246,7 +257,6 @@ Let's run the first bunch of models on the whole dataset. We'll start off with i
   }else{
     MLMA_models <- readRDS("./output/MLMA_models_int")
   }
-
 
 # View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. We can also get from these models estimates of heterogeneity from our models. Here we need the sampling variance vector and also the models for SMD and CVR. We can then use multivariate apply (mapply) across these lists
 
@@ -342,7 +352,7 @@ if(rerun_models == TRUE){
 data.frame(pers_new %>%
 group_by(taxo_group, personality_trait) %>%
 filter(!is.na(SSD_index))%>%
-summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+summarise(N_ssd = length(unique(SSD_index)), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
 
 # adjusted models used for SSD:
   # SSD (not scaled), no interaction term
@@ -371,7 +381,8 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
 
 # First, we need to subset our pers dataset by taxo group to drop the unwanted levels. Let's start with mammals because it's the easiest one
     pers_new_mammal <- as.data.frame(pers_new %>%
-    filter(!personality_trait == "sociality" & taxo_group == "mammal"))
+    filter(!personality_trait == "activity" & !personality_trait == "sociality") %>%
+    filter(taxo_group == "mammal")) 
 
   # Check that this has been done correctly
       pers_new_mammal %>%
@@ -386,13 +397,13 @@ summarise(N_ssd = length(SSD_index), N_spp = length(unique(spp_name_phylo)), N_s
 fit_MLMA_SSD_mammal <- function(data, phylo_vcv){
     
   #SMD
-  MLMR_mods_pers_SSD_mammal_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*scale(SSD_index), V = SMD_vi, 
+  MLMR_mods_pers_SSD_mammal_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, 
                                           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                           R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
                                           test = "t", data = pers_new_mammal)
 
 #lnCVR
-  MLMR_mods_pers_SSD_mammal_lncvr <- rma.mv(CVR_yi ~ -1+ personality_trait*scale(SSD_index), V = CVR_vi, 
+  MLMR_mods_pers_SSD_mammal_lncvr <- rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, 
                                             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                             R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
                                             test = "t", data = pers_new_mammal)
@@ -476,138 +487,16 @@ MLMR_models_pers_SSD_mammal <- meta_model_fits(pers_new_mammal, phylo_vcv[4], ty
   
   # rerun models
 #SMD
-  MLMR_mods_pers_SSD_invert_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*scale(SSD_index), V = SMD_vi, 
+  MLMR_mods_pers_SSD_invert_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, 
                                           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                           R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
                                           test = "t", data = pers_new_invert)
 
 #lnCVR
-  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*scale(SSD_index), V = CVR_vi, 
+  MLMR_mods_pers_SSD_fish_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*SSD_index, V = CVR_vi, 
                                             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                             R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
                                             test = "t", data = pers_new_invert)  
-```
-
-# using Dan's code to extract estimates from SSD models
-```{r}
-# define some things first
-model = MLMR_models_pers_SSD
-mod_cat = "personality_trait"
-mod_cont = "SSD_index"
-
-# Get prediction intervals for a single categorical variable when controlling for continuous variables in a model.
-get_pred_est_cont <- function (model, mod_cat, mod_cont, type = c("mean", "zero")) {
-	type = match.arg(type)
-	# Categorical moderator
-		     pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
-	    name_cat <- row.names(model$beta)[pos]
-	    name_cat <- as.character(stringr::str_replace(name_cat, {{mod_cat}}, ""))
-	  name_clean <- firstup(name_cat)
-	         len <- length(name_clean)
-
-	# Continuous moderators
-		  len_cont <- length(mod_cont)
-
-		  if(type == "mean"){
-			  if(len_cont == 1){  	
-			  	means_cont <- mean(model$X[,mod_cont, drop = FALSE])
-			  	names(means_cont) <- mod_cont
-			  }
-			  if(len_cont > 1){
-				means_cont <- colMeans(model$X[,mod_cont, drop = FALSE])
-			  }
-		}
-
-		if(type == "zero"){
-			if(len_cont == 1){  	
-			  	means_cont <- 0
-			  	names(means_cont) <- mod_cont
-			  }
-			  if(len_cont > 1){
-				means_cont <- rep(0, len_cont)
-				names(means_cont) <- mod_cont
-			  }
-		}
-
-	# Get prediction intervals
-		newdata <- matrix(0, ncol = len+len_cont, nrow = len)
-		diag(newdata[c(1:len),c(1:len)]) <- 1
-		newdata[,c((len+1):(len+len_cont))] <- means_cont
-		
-		for(i in 1:len){
-			newdata[i,c((len+1):(len+len_cont))] <-  means_cont
-		}
-
-		colnames(newdata) <- c(name_cat, names(means_cont))
-
-	     pred <- metafor::predict.rma(model, newmods = newdata)
-
-	 estimate <- pred$pred
-	  lowerCL <- pred$ci.lb 
-	  upperCL <- pred$ci.ub
-	  lowerPR <- pred$cr.lb
-	  upperPR <- pred$cr.ub 
-	  
-	  table <- tibble::tibble(name = name_clean, estimate = estimate, lowerCL = lowerCL, upperCL = upperCL, lowerPR = lowerPR, upperPR = upperPR)
-	  return(table)
-}
-
-get_pred_est_cont(MLMR_models_pers_SSD_mammal, pers_new_mammal$personality_trait, pers_new_mammal$SSD_index) #Error - x must be an array of 2 dimensions
-
-get_data_cont <- function(model, mod_cat){
-       
-     pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
-	    names <- row.names(model$beta)[pos]
-	    name_cat <- as.character(stringr::str_replace(names, {{mod_cat}}, ""))
-
-	    X <- as.data.frame(model$X)[,names]
-
-	  moderator <- matrix(ncol = 1, nrow = dim(X)[1])
-
-	  for(i in 1:ncol(X)){
-	      moderator <- ifelse(X[,i] == 1, name_cat[i], moderator)
-	  }
-	    moderator <- firstup(moderator)
-	    yi <- model$yi
-	    vi <- model$vi
-	  type <- attr(model$yi, "measure")
-
-		data <- data.frame(yi, vi, moderator, type)
-		return(data)
-
-}
-
-mod_results_new <- function(model, mod_cat, mod_cont, type = c("mean", "zero")) { 
-
-	type = match.arg(type)
-
-	if(all(class(model) %in% c("rma.mv", "rma")) == FALSE) {stop("Sorry, you need to fit a metafor model of class rma.mv or rma")}
-
-  data <- get_data_cont(model, mod_cat)
-
-  if(length(mod_cont) == 0){
-	# Get confidence intervals
-	CI <- get_est(model, mod_cat)
-
-	# Get prediction intervals
-	PI <- get_pred(model, mod_cat)
-
-	model_results <- list(mod_table = cbind(CI, PI[,-1]), data = data)
-	}
-
-	if(length(mod_cont) >= 1){
-		ests <- get_pred_est_cont(model, mod_cat, mod_cont, type)
-		model_results <- list(mod_table = ests, data = data)	
-	}
-
-	class(model_results) <- "orchard"
-
-	return(model_results)
-
-}
-
-#test <- mod_results(model5_RR, mod_cat = "order", mod_cont = c("mean_t", "delta_t", "Q10"))
-#print(test)
 ```
 
 # 8. mating system - retrying this model because I think that this might be an important moderator term to look at sexual selection over natural selection (which I think SSD encompasses both)
@@ -1024,6 +913,21 @@ pers_new$proportion <- ifelse(is.na(pers_new$proportion), 0, 1)
   lnCVR_mods_prop <- sensitivity_mod2_prop["lnCVR",] 
 
   # fish and inverts have significantly different effect sizes for proportional data than other data (same direction for fish and invert SMD, opposite direction for invert lnCVR)
+  #############################
+  # let's rerun our 3 main models excluding scores and proportions to see how they change things (expect to see differences for inverts, maybe fish, but also for some personality traits like boldness or aggression)
+    
+  # additionally, removing scores and proportional data/effect sizes will remove most of the outliers we've flagged in our data, and likely resolve the large smapling variance ratios flagged in the models.
+  
+  # filter out scores and proportions from dataset
+ pers_new <- as.data.frame(pers_new %>%
+  filter(!score == "score" & !proportion == "proportion")) 
+  
+  # check this has been done correctly
+  data.frame(pers_new %>%
+  group_by(taxo_group, proportion, score) %>%
+  summarise(n = n())) #good to go
+  
+  # rerun intercept model, pers_trait model and SSD models
 
 ```
 
@@ -1247,11 +1151,11 @@ p <- ggtree(pruned.birdtree, branch.length='none', layout='circular') %<+% bird_
     birds_matrix <- data.matrix(pers_bird) #yay!
     
   # add the heatmap data to our plot
-gheatmap(p, birds_matrix, offset = 40, 
-         low = "white", high = "mediumseagreen", color=NULL, 
-         colnames_position="bottom", 
-         colnames_angle=60, colnames_offset_y = 1, 
-         hjust=0, font.size=2)
+bird_plot <- gheatmap(p, birds_matrix, offset = 40, 
+          low = "white", high = "mediumseagreen", color=NULL, 
+          colnames_position="bottom", 
+          colnames_angle=60, colnames_offset_y = 1, 
+          hjust=0, font.size=2)
 
 ggsave("birdphylo.pdf", dpi = 300) #saves how it looks in the plot window
 
@@ -1268,13 +1172,26 @@ ggsave("birdphylo.pdf", dpi = 300) #saves how it looks in the plot window
 # bird_SMD
 # bird_lncvr
 
-# window size (A4?)
-dev.new(width=8.27,height=11.69,noRStudioGD = TRUE)
+# window size
+dev.new(width=4,height=4,noRStudioGD = TRUE)
 
-ggarrange()
+# Bird lnCVR
+bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, N = "none", transfm = "none")
+
+# bird smd
+bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, N = "none", transfm = "none") 
+
+# window size - birds and mammals will have plots side by side
+dev.new(width=8,height=4,noRStudioGD = TRUE)
+
+# trying ggarrange()
+bird_effects <- ggarrange(bird_SMD, bird_lncvr, nrow = 1, align = "hv", labels = "a") # still can't get rid of those axis labels
+    # just uses the 1 label ???
+
+# using patchwork for comparison
+  bird_SMD + bird_lncvr + plot_layout(guides = 'collect') + plot_annotation(tag_levels = 'a')
 ```
 
- 
 # mammals
 
 ```{r}
@@ -1295,11 +1212,14 @@ pruned.mammaltree <- drop.tip(mammaltree, setdiff(mammaltree$tip.label, mammal_d
 # set rownames for labelling tips
 rownames(mammal_data) <- pruned.mammaltree$tip.label
 
+# set window
+dev.new(width=7,height=6,noRStudioGD = TRUE)
+
  # tree structure (cladogram, circular)
 p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% mammal_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) +
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=3, hjust=0) +
   theme(legend.position = 'right')
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
@@ -1323,11 +1243,19 @@ p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% ma
     mammal_matrix <- data.matrix(pers_mammal) #yay!
     
   # add the heatmap data to our plot
-gheatmap(p2, mammal_matrix, offset = 13, 
-         low = "white", high = "mediumseagreen", color=NULL, 
-         colnames_position="bottom", 
-         colnames_angle=85, colnames_offset_y = 1, 
-         hjust=0, font.size=2.8) 
+mammal_plot <- gheatmap(p2, mammal_matrix, offset = 22, 
+              low = "white", high = "mediumseagreen", color=NULL, 
+              colnames_position="bottom", 
+              colnames_angle=60, colnames_offset_y = 1, 
+              hjust=0, font.size=2.5) 
+
+ggsave("mammalphylo.pdf", dpi = 300)
+
+# orchard plots
+# smd
+mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")
+#lncvr
+mammal_lncvr <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
 ```
 
 # reptilia
@@ -1349,11 +1277,14 @@ pruned.reptree <- drop.tip(reptree, setdiff(reptree$tip.label, rep_data$spp_name
 # set rownames for labelling tips
 rownames(rep_data) <- pruned.reptree$tip.label
 
+# set window size
+dev.new(width=7,height=6,noRStudioGD = TRUE)
+
  # tree structure (cladogram, circular)
-p3 <- ggtree(pruned.reptree, layout='fan', open.angle=120) %<+% rep_data + 
+p3 <- ggtree(pruned.reptree, branch.length='none', layout='circular') %<+% rep_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0) # fan shape because we only have 10 species
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=4, hjust=0) # fan shape because we only have 10 species
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
     # subset dataset
@@ -1376,11 +1307,20 @@ p3 <- ggtree(pruned.reptree, layout='fan', open.angle=120) %<+% rep_data +
     rep_matrix <- data.matrix(pers_rep) 
     
   # add the heatmap data to our plot
-        gheatmap(p3, rep_matrix, offset = 20, width = 1,
-         low = "white", high = "mediumseagreen", color=NULL, 
-         colnames_position="bottom", 
-         colnames_angle=90, colnames_offset_y = 1, 
-         hjust=0, font.size=2.8) #just not aligning properly 
+rep_plot <- gheatmap(p3, rep_matrix, offset = 20, width = 2,
+            low = "white", high = "mediumseagreen", color=NULL, 
+            colnames_position="top", 
+            colnames_angle=60, colnames_offset_y = 0, 
+             hjust=0, font.size=2) #just not aligning properly 
+        
+  # save it
+  ggsave("reptilphylo.pdf", dpi = 300)
+  
+  # orchard plots
+  # smd
+reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")
+  # lncvr
+reptile_lncvr <- orchard_plot(lnCVR_mods_pers[[5]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")  
 ```
 
 # fish
@@ -1391,6 +1331,9 @@ p3 <- ggtree(pruned.reptree, layout='fan', open.angle=120) %<+% rep_data +
     filter(taxo_group == "fish"))
  
  row.names(fish_data) <- fish_data$spp_name_phylo 
+ 
+ # window size
+ dev.new(width=7,height=6,noRStudioGD = TRUE)
  
 # setting up the basic tree structure
  
@@ -1407,7 +1350,7 @@ rownames(fish_data) <- pruned.fishtree$tip.label
 p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=8, hjust=0.5) +
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=4, hjust=0) +
   theme(legend.position = "right")
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
@@ -1431,11 +1374,21 @@ p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish
     fish_matrix <- data.matrix(pers_fish) 
     
   # add the heatmap data to our plot
-gheatmap(p4, fish_matrix, offset = 13, 
+     fish_plot <- gheatmap(p4, fish_matrix, offset = 40, width = 2,
          low = "white", high = "mediumseagreen", color=NULL, 
          colnames_position="bottom", 
-         colnames_angle=45, colnames_offset_y = 1, 
-         hjust=0.5, font.size=2.8) 
+         colnames_angle=60, colnames_offset_y = 1, 
+         hjust=0.5, font.size=2) 
+
+    # save it
+  ggsave("fishphylo.pdf", dpi = 300)
+  
+  # orchard plots
+#smd
+  fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")  
+#lncvr
+  fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
+        
 ```
 
 # inverts
@@ -1462,7 +1415,7 @@ rownames(invert_data) <- pruned.inverttree$tip.label
 p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% invert_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=7, hjust=0.5) +
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=15, hjust=0.5) +
   theme(legend.position = "right")
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
@@ -1486,14 +1439,24 @@ p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% in
     invert_matrix <- data.matrix(pers_invert) 
     
   # add the heatmap data to our plot
-inv_plot <- gheatmap(p5, invert_matrix, offset = 12, 
+     invertplot <- gheatmap(p5, invert_matrix, offset = 30, 
          low = "white", high = "mediumseagreen", color=NULL, 
-         colnames_position="top", 
-         colnames_angle=45, colnames_offset_y = 1, 
-         hjust=0, font.size=2.8)
+         colnames_position="bottom", 
+         colnames_angle=45, colnames_offset_y = 0, 
+         hjust=0, font.size=2.5)
+
+# set window size
+dev.new(width = 7, height = 6, noRStudioGD = TRUE)
 
 # save plot
-ggsave()
+ggsave("invertphylo.pdf", dpi = 300)
+
+# orchard plots
+# smd
+invert_SMD<- orchard_plot(smd_mods_pers[[3]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")
+
+# lncvr
+invert_lncvr<- orchard_plot(lnCVR_mods_pers[[3]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
 ```
 
 # patching figures together - trying ggarrange and patchwork to see which works best
@@ -1502,9 +1465,66 @@ ggsave()
 # packages to use: ggarrange, patchwork, ggpubr (uses ggarrange function)
 
 # set window size
-dev.new(width=8.27,height=11.69,noRStudioGD = TRUE)
+dev.new(width=11.69,height=8.27,noRStudioGD = TRUE) #A4 size
 
 # use patchwork to set size limits to plots
+# mammals
+  #mammal_plot
+  #mammal_SMD
+  #mammal_lncvr
+
+# birds
+  #bird_plot
+  #bird_SMD
+  #bird_lncvr
+
+# reptiles
+  #rep_plot
+  #reptile_SMD
+  #reptile_lncvr
+
+# fish
+  # fish_plot
+  # fish_SMD
+  # fish_lncvr
+
+# inverts
+  #invertplot is the phylo
+  #invert_SMD SMD orchard plot
+  #invert_lncvr lncvr orchard plot
+
+# want phylo on top (centred if possible) with SMD and lncvr next to each other underneath (taller rather than wider would look better), give each group it's own letter so we can tell who's who
+
+invertplot - invert_SMD + invert_lncvr # not a grid shape so doesn't really work
+
+# try setting the layout
+layout <- "
+#AAABBB#
+#AAABBB#
+CCCCDDDD
+#EEEFFF#
+#EEEFFF#
+GGGGHHHH
+"
+mammal_plot + mammal_SMD + mammal_lncvr + 
+  bird_plot + bird_SMD + bird_lncvr + 
+  rep_plot + reptile_SMD + reptile_lncvr +
+  fish_plot + fish_SMD + fish_lncvr + 
+  invertplot + invert_SMD + invert_lncvr +  
+  plot_layout(design = layout)
+
+# let's see if we can grab the legends from heatmap plot to place beside phylogeny
+(rep_phylo / bird_SMD | bird_lncvr) + plot_layout(guides = 'collect')  plot_annotation(tag_levels = 'a') # need to work on this one - where it collects to
+
+# collecting repetitive guides to the side so we can trim them off in an edit
+dev.new(width = 9, height = 4, noRStudioGD = TRUE)
+bird_SMD + bird_lncvr + guide_area() + plot_layout(guides = 'collect')
+ggsave("bird_orchards.pdf", dpi = 300)
+
+# somewhat better but still enormous 
+dev.new(width = 10, height = 4, noRStudioGD = TRUE)
+bird_SMD + bird_lncvr
+ggsave("bird_orchards.pdf", dpi = 300)
 
 ```
 
