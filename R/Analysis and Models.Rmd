@@ -56,7 +56,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, score, proportion)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, score, proportion, measurement_type)
 
 # Check out some outliers
 #  pers_new %>%
@@ -616,7 +616,6 @@ summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(un
   smd_mods_pers_enviro <- MLMR_models_pers_environ["SMD",]
   lnCVR_mods_pers_enviro <- MLMR_models_pers_environ["lnCVR",]
   
-# how to swap the levels and compare them???
 ```
 
 # 10d. Secondary model 4 - Study type
@@ -788,7 +787,14 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
 
    ob <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
 
-   
+   split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D <- ob["SMD",]
+  lnCVR_mods_D <- ob["lnCVR",] 
+
+pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_matrices_0.8)   
+  
+  smd_pers_mods_D <- pers_trait_D["SMD",]
+  lnCVR_pers_mods_D <- pers_trait_D["lnCVR",] 
    
 # Intercept models
    # break these up for each taxo group
@@ -995,6 +1001,10 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
 
     # lnCVR:
     funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+    
+  # funnels with full personality model
+    # SMD
+    plot(MLMR_models_pers_trait[1], qq= TRUE)
 
 # 2. Egger's test - regression test
       # applies a regression test to the funnel plots to provide a z score and p-value for likelihood of publication bias
@@ -1255,7 +1265,7 @@ ggsave("mammalphylo.pdf", dpi = 300)
 # smd
 mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")
 #lncvr
-mammal_lncvr <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
+mammal_lncvr <- orchard_plot(lnCVR_mods_pers[[4]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
 ```
 
 # reptilia
@@ -1307,14 +1317,14 @@ p3 <- ggtree(pruned.reptree, branch.length='none', layout='circular') %<+% rep_d
     rep_matrix <- data.matrix(pers_rep) 
     
   # add the heatmap data to our plot
-rep_plot <- gheatmap(p3, rep_matrix, offset = 20, width = 2,
+rep_plot <- gheatmap(p3, rep_matrix, offset = 25, width = 2,
             low = "white", high = "mediumseagreen", color=NULL, 
             colnames_position="top", 
             colnames_angle=60, colnames_offset_y = 0, 
              hjust=0, font.size=2) #just not aligning properly 
         
   # save it
-  ggsave("reptilphylo.pdf", dpi = 300)
+  ggsave("reptilephylo.pdf", dpi = 320)
   
   # orchard plots
   # smd
@@ -1374,14 +1384,14 @@ p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish
     fish_matrix <- data.matrix(pers_fish) 
     
   # add the heatmap data to our plot
-     fish_plot <- gheatmap(p4, fish_matrix, offset = 40, width = 2,
+     fish_plot <- gheatmap(p4, fish_matrix, offset = 55, width = 2,
          low = "white", high = "mediumseagreen", color=NULL, 
          colnames_position="bottom", 
          colnames_angle=60, colnames_offset_y = 1, 
          hjust=0.5, font.size=2) 
 
     # save it
-  ggsave("fishphylo.pdf", dpi = 300)
+  ggsave("fishphylo.pdf", dpi = 320) #legends in a weird order
   
   # orchard plots
 #smd
@@ -1439,17 +1449,17 @@ p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% in
     invert_matrix <- data.matrix(pers_invert) 
     
   # add the heatmap data to our plot
-     invertplot <- gheatmap(p5, invert_matrix, offset = 30, 
+     invertplot <- gheatmap(p5, invert_matrix, offset = 30, width = 1.5, 
          low = "white", high = "mediumseagreen", color=NULL, 
          colnames_position="bottom", 
          colnames_angle=45, colnames_offset_y = 0, 
-         hjust=0, font.size=2.5)
+         hjust=0, font.size=2)
 
 # set window size
 dev.new(width = 7, height = 6, noRStudioGD = TRUE)
 
 # save plot
-ggsave("invertphylo.pdf", dpi = 300)
+ggsave("invertphylo.pdf", dpi = 320) #legend in a weird order
 
 # orchard plots
 # smd
@@ -1525,6 +1535,8 @@ ggsave("bird_orchards.pdf", dpi = 300)
 dev.new(width = 10, height = 4, noRStudioGD = TRUE)
 bird_SMD + bird_lncvr
 ggsave("bird_orchards.pdf", dpi = 300)
+
+# try to plot phylo with the legend off the phylo - should make it smaller
 
 ```
 

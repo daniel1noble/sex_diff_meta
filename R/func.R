@@ -88,6 +88,36 @@ fit_MLMA_reg_models_studytype <- function(data, phylo_vcv){
               lnCVR = lnCVR))
 }
 
+fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
+    lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+                                                  random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8)
+  
+  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                R = list(spp_name_phylo=y, obs = z), 
+                                                data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
+fit_MLMA_reg_models_personality_trait_D <- function(data, phylo_vcv, D){
+                lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, 
+                                                  random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8)
+  
+                SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                R = list(spp_name_phylo=y, obs = z), 
+                                                data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8) 
+  
+        return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
 sensitivity_mod1 <- function(data, phylo_vcv){
   lnCVR <- metafor::rma.mv(CVR_yi ~ score, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
   
@@ -158,6 +188,25 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
       
    return(model_fits)
 } 
+
+meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
+  taxa_list <- split(data, data$taxo_group)
+  
+  type <-  match.arg(type)
+  
+  if(type == "int"){
+    model_fits_D <- mapply(function(x, y, z) fit_int_MLMAmodel_D(x, y, z), x = taxa_list, y = phylo_vcv, z = D)
+  }
+  
+  if(type == "pers"){
+    model_fits_D <- mapply(function(x, y, z) fit_MLMA_reg_models_personality_trait_D(x, y, z), x = taxa_list, y = phylo_vcv, z = D)
+  }
+  
+  if(type == "pers_SSD"){
+    model_fits_D <- mapply(function(x, y, z) fit_MLMA_reg_models_personality_trait_SSD_index_D(x, y, z), x = taxa_list, y = phylo_vcv, z = D)
+  }
+  
+}
 
 # This function is very useful for both checking that taxa names in data and tree match, printing out where discrepancies lie and then allowing the trees to be pruned to the taxa within the dataset assuming all other taxa match. 
 
