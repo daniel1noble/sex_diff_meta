@@ -245,3 +245,51 @@ tree_checks <- function(data, tree, dataCol, type = c("checks", "prune")){
           ave.tree <- midpoint(ls.consensus(tr))
           return(ave.tree)
     }
+
+
+# Convert proportions to a logit scale making them normally distributed, which should better satisfy assumptions of SMD and lnCVR
+convert_propor <- function(mean, sd){
+    logit_mean <- gtools::logit(mean) + (sd^2 / 2)*((1 / (1-mean)^2) - (1 / mean^2))
+     
+      sd_logit  <- sqrt( sd^2* (((1 / mean) + (1 / (1-mean)))^2))
+
+    return(cbind(mean_conv = logit_mean, sd_conv = sd_logit))
+}
+
+## Just a quick check to see things are sensible
+# prop = c(0.20, 0.5, 0.6)
+# sd = c(0.10, 0.2, 0.4)
+# convert_propor(prop, sd)
+
+# Convert latency data to a log normal distributed which should normalize and better satisfy assumptions of SMD and lnCVR
+convert_latency <- function(mean, sd, method = c("delta", "analyt")){
+
+  if(method == "delta"){
+         lnMean <- log(mean) - (sd^2 / (2*mean^2))
+      sd_lnMean <- sqrt(sd^2 / mean^2)
+  }
+
+  if(method == "analyt"){
+         lnMean <- log(mean) - log(sqrt(1 + (sd^2 / mean^2)))
+      sd_lnMean <- sqrt(log(1 + (sd^2 / mean^2)))
+  }
+
+  return(cbind(mean_conv = lnMean, sd_conv = sd_lnMean))
+}
+
+# Check that the latency calculation is correct as I have never applied conversions before
+# mean_norm <- rnorm(100000, 5, 1)  # Simulate a large N from normal dist
+
+# Calculate mean and sd from this as if it were a sample; should be very precise because of the large N
+#mean_normal_scale <- mean(mean_norm)
+#  sd_normal_scale <-   sd(mean_norm)
+
+# Now, this is what we should get for mean and sd on a log normal scale
+#mean_lognormal_scale <- mean(log(mean_norm))
+#  sd_lognormal_scale <-   sd(log(mean_norm))
+
+# Check that our function recovers this, and different methods are nearly the same
+#convert_latency(mean_normal_scale, sd_normal_scale, method = "analyt")
+#convert_latency(mean_normal_scale, sd_normal_scale, method = "delta")
+
+# These virtually match, so we know the solutions are correct. There will be slight differences given that the simulated data depends on sample size and will vary slight from one sim to the next. The equations are analytical approximations or solutions for what we can expect from repeated simulations.
