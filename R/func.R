@@ -248,12 +248,16 @@ tree_checks <- function(data, tree, dataCol, type = c("checks", "prune")){
 
 
 # Convert proportions to a logit scale making them normally distributed, which should better satisfy assumptions of SMD and lnCVR
-convert_propor <- function(mean, sd){
-    logit_mean <- gtools::logit(mean) + (sd^2 / 2)*((1 / (1-mean)^2) - (1 / mean^2))
+convert_propor <- function(male_mean, male_sd, female_mean, female_sd){
+    logit_mean_male <- gtools::logit(male_mean) + (male_sd^2 / 2)*((1 / (1-male_mean)^2) - (1 / male_mean^2))
      
-      sd_logit  <- sqrt( sd^2* (((1 / mean) + (1 / (1-mean)))^2))
+      sd_logit_male  <- sqrt(male_sd^2* (((1 / male_mean) + (1 / (1-male_mean)))^2))
+      
+      logit_mean_female <- gtools::logit(female_mean) + (female_sd^2 / 2)*((1 / (1-female_mean)^2) - (1 / female_mean^2))
+      
+      sd_logit_female  <- sqrt(female_sd^2* (((1 / female_mean) + (1 / (1-female_mean)))^2))
 
-    return(cbind(mean_conv = logit_mean, sd_conv = sd_logit))
+    return(cbind(male_mean_conv = logit_mean_male, male_sd_conv = sd_logit_male, female_mean_conv = logit_mean_female, female_sd_conv = sd_logit_female))
 }
 
 ## Just a quick check to see things are sensible
@@ -262,7 +266,7 @@ convert_propor <- function(mean, sd){
 # convert_propor(prop, sd)
 
 # Convert latency data to a log normal distributed which should normalize and better satisfy assumptions of SMD and lnCVR
-convert_latency <- function(mean, sd, method = c("delta", "analyt")){
+convert_latency <- function(male_mean, male_sd, female_mean, female_sd, method = c("delta", "analyt")){
 
   if(method == "delta"){
          lnMean <- log(mean) - (sd^2 / (2*mean^2))
@@ -270,11 +274,13 @@ convert_latency <- function(mean, sd, method = c("delta", "analyt")){
   }
 
   if(method == "analyt"){
-         lnMean <- log(mean) - log(sqrt(1 + (sd^2 / mean^2)))
-      sd_lnMean <- sqrt(log(1 + (sd^2 / mean^2)))
+         lnMean_male <- log(male_mean) - log(sqrt(1 + (male_sd^2 / male_mean^2)))
+      sd_lnMean_male <- sqrt(log(1 + (male_sd^2 / male_mean^2)))
+      lnMean_female <- log(female_mean) - log(sqrt(1 + (female_sd^2 / female_mean^2)))
+      sd_lnMean_female <- sqrt(log(1 + (female_sd^2 / female_mean^2)))
   }
 
-  return(cbind(mean_conv = lnMean, sd_conv = sd_lnMean))
+  return(cbind(male_mean_conv = lnMean_male, male_sd_conv = sd_lnMean_male, female_mean_conv = lnMean_female, female_sd_conv = sd_lnMean_female))
 }
 
 # Check that the latency calculation is correct as I have never applied conversions before

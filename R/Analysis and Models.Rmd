@@ -56,7 +56,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, score, proportion, measurement_type)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, measurement_type)
 
 # Check out some outliers
 #  pers_new %>%
@@ -72,7 +72,33 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
             group_by(taxo_group) %>% 
             mutate(obs = 1:length(study_ID))
   
-# NOTE FOR LAUREN save prepared pers_new dataset as output to save time :)
+# Our dataset has 1) latency data which has not been corrected for normality (i.e. log-transformed), and 2) proportional data which constrains distributions of variances at high and low values. As such, we need to correct these means and SDs in the dataset before we calculate SMD and lnCVR effect sizes. Scores will be considered as 'normal' data. These corrections should get rid of any outliers.
+  
+  # 1. converting proportions to logit scale 
+ # filter dataset to show only proportional data
+  pers_proportion <- as.data.frame(pers_new %>%
+                      filter(measurement_type == "proportion"))
+  
+  # both sexes combined in the one function now - save list to object so I can save as dataframe
+  proportion_all <- convert_propor(pers_proportion$male_mean, pers_proportion$m_SE_to_SD, 
+                                   pers_proportion$female_mean, pers_proportion$f_SE_to_SD)
+
+  # 2. converting latency data to log-latency
+  # filter dataset to show only latency data
+  pers_latency <- as.data.frame(pers_new %>%
+                      filter(measurement_type == "latency"))
+  
+ # both sexes combined in the one function now - save list to object so I can save as dataframe
+  latency_all <- convert_latency(pers_latency$male_mean, pers_latency$m_SE_to_SD, pers_latency$female_mean, 
+                                 pers_latency$f_SE_to_SD, method = "analyt") 
+        # a bunch of NAs for some reason, but running the calculation with the means and SD works so not sure what's wrong here
+
+ # make table into dataframe, try merge() to merge with subset, then merge the 3?
+write.csv(proportion_all, file = "pers_proportion.csv", row.names = FALSE)  
+write.csv(latency_all, file = "pers_latency.csv", row.names = FALSE)  
+    # add in the new columns manually since I've wasted so much time trying to do it in code
+
+ # Remove Pruitt papers from dataset as they have been flagged for data duplication issues by coauthors ???
 ```
 
 # 4. Calculate effect sizes (SMD and lnCVR)
