@@ -56,7 +56,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
   
 # Just select the relevant columns for now to make life easier
   pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, measurement_type)
+          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean_conv, male_sd_conv, female_n, female_mean_conv, female_sd_conv, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, measurement_type)
 
 # Check out some outliers
 #  pers_new %>%
@@ -108,14 +108,14 @@ write.csv(latency_all, file = "pers_latency.csv", row.names = FALSE)
 # SMD (Hedge's g)
   pers_new <- escalc(measure = "SMD", 
                 n1i = male_n, n2i = female_n,
-                m1i = male_mean, m2i = female_mean,
-                sd1i = m_SE_to_SD, sd2i = f_SE_to_SD, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
+                m1i = male_mean_conv, m2i = female_mean_conv,
+                sd1i = male_sd_conv, sd2i = female_sd_conv, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
 
 # lnCVR
   pers_new <- escalc(measure = "CVR",
                        n2i = female_n, n1i = male_n,
-                       m2i = female_mean, m1i = male_mean,
-                       sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
+                       m2i = female_mean_conv, m1i = male_mean_conv,
+                       sd2i = female_sd_conv, sd1i = male_sd_conv, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
 
 # Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
   #spp_drop <- pers_new %>%
@@ -139,7 +139,20 @@ write.csv(latency_all, file = "pers_latency.csv", row.names = FALSE)
   hist(pers_new$SMD_yi)
   funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
   text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
+    
 
+pers_new %>% 
+  filter(study_ID == "P231" & SMD_yi < -20) # P231 has 2 datapoints (proportions) with huge differences: -68 and -38 remove?
+
+  # filter out those two large effect sizes
+ pers_new <- pers_new %>%
+              filter(!SMD_yi < -20)
+  dim(pers_new) 
+  
+  # check funnel once more 
+  pers_new %>% 
+  filter(study_ID == "P206" & SMD_yi < -15) # looks like a genuine effect size, I'm going to leave it in
+  
 # Effect sizes 3 and above
   pers_new %>%
   filter(SMD_yi > 3)
@@ -147,53 +160,33 @@ write.csv(latency_all, file = "pers_latency.csv", row.names = FALSE)
 # Effect sizes below -5
   pers_new %>% 
   filter(SMD_yi < -5)
-# checking SMD outliers
-  # P038 is correct as reported in paper, but is a proportion
-  # P029 has male SD wrong - paper says 64.4 but was recorded as 0.001 for some reason - amended in pers dataset
-  # P017 is correct
-  # P021 looks weird in paper too but is correct
-  # P136 is correct
-  # P014 is correct
-  # P029 male error looks too small
-  # P165 is a boldness score
-  # P015 6 effect sizes are proportions, the rest change direction (check figures though)
-  # P003 both effect sizes are aggression scores
-  
 
 #NOTE Lauren. Can you also check all the data on the top of the funnels. For some analyses the ratio of smallest to largest sampling variance is very large. This could be problems with data that have very high precision, could be incorrect sample sizes, SD or SE entered wrong. For example, check all data where Inverse SE > 14 in funnel for SMD and > 17 for lnCVR.  
   
 # checking SMD outliers - inverse SE > 14
 funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
  text(as.character(pers_new$obs), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi), offset = 0.8)
- 
-# outliers (SMD):
-    # obs 509 (-23 for SMD) - in P015 and is correct/ genuine strong difference
-    # obs 128 (27.87 inverse SE) - in P041: is a score for aggression, but looks correct
-    # obs 120 (also high inverse SE) - in P091: looks correct, females have more variation than males, but same means
-    # obs 41 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
-    # obs 42 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
-    # obs 136 (big SMD, high error?) - in P165: SCORE - big sample size, precise data
-    # obs 121 (no mean diff, small error) - in P041: SCORE - big sample size, big SD
-    # obs 301 (no mean diff, small error) - in P211: exploration time, big sample sizes so high precision?
-    # obs 603 (no mean diff, small error) - in P097 or P157?
 
 # checking lnCVR outliers
  funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
  text(as.character(pers_new$obs), x = pers_new$CVR_yi, y = 1/sqrt(pers_new$CVR_vi), offset = 0.8) 
-  
-# outliers (lnCVR):
-    # obs 120 - in P041? - really big sample size, small error (so precise?)
-    # obs 128 - in P041 - aggression SCORE, again big sample size and small error
-    # obs 124 - in P041 - same thing
-    # obs 121 - also in P041
-    # obs 136 - in P165 - score, males and females have the same error from a really big sample size (check this one out)
  
+ pers_new %>%
+   filter(study_ID == "P041") # each datapoint from this study is at the top of the funnel - remove and see if model runs?
+ 
+ # remove P041
+ pers_new <- pers_new %>%
+              filter(!study_ID == "P041")
+  dim(pers_new) # looks more normal now
+
 ```
 
 ### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
 1. Need to transform proportions to logits, then to Hedge's g?  
+    DONE
 2. Scores - cut them out? 
     See section 10 for these two points
+    Left them in, but removed some outlier scores from a single study
 3. Flip signs where indicated 
     Done
 
@@ -378,19 +371,20 @@ if(rerun_models == TRUE){
 data.frame(pers_new %>%
 group_by(taxo_group, personality_trait) %>%
 filter(!is.na(SSD_index))%>%
-summarise(N_ssd = length(unique(SSD_index)), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
 
 # adjusted models used for SSD:
   # SSD (not scaled), no interaction term
     lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait + SSD_index, V = CVR_vi, random = list(~1|study_ID, random~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
 
     SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+    
+    # SSD only 
 
-  # interaction models with optimiser changed for convergence
-              lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+    lnCVR <- metafor::rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
-
+    SMD <- metafor::rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+    
 ```
 
 # NOTE: Since we are conducting our meta-regression at the species level (the level at which we can assume effect sizes are independent), any personality trait with fewer than 10 species needs to be dropped to look at interactions between SSD and personality. Having a minimum of 10 studies etc. is the rule of thumb for meta-regressions (e.g. see Borenstein et al Intro to Meta-A)
@@ -407,7 +401,7 @@ summarise(N_ssd = length(unique(SSD_index)), N_spp = length(unique(spp_name_phyl
 
 # First, we need to subset our pers dataset by taxo group to drop the unwanted levels. Let's start with mammals because it's the easiest one
     pers_new_mammal <- as.data.frame(pers_new %>%
-    filter(!personality_trait == "activity" & !personality_trait == "sociality") %>%
+    filter(!personality_trait == "sociality") %>%
     filter(taxo_group == "mammal")) 
 
   # Check that this has been done correctly
@@ -416,26 +410,9 @@ summarise(N_ssd = length(unique(SSD_index)), N_spp = length(unique(spp_name_phyl
       summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
 
 # Extract the phylogenetic correlation matrices
-  phylo_vcv_mammal <- phylo_vcv[[4]] # seems to work better than the crap I just went through
+  phylo_vcv_mammal <- phylo_vcv[[4]] 
 
 # Rerun SSD model with interaction term:
-
-fit_MLMA_SSD_mammal <- function(data, phylo_vcv){
-    
-  #SMD
-  MLMR_mods_pers_SSD_mammal_SMD <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, 
-                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                          R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
-                                          test = "t", data = pers_new_mammal)
-
-#lnCVR
-  MLMR_mods_pers_SSD_mammal_lncvr <- rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, 
-                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
-                                            test = "t", data = pers_new_mammal)
-}
-
-fit_MLMA_SSD_mammal(pers_new_mammal, phylo_vcv[4])
 
 MLMR_models_pers_SSD_mammal <- meta_model_fits(pers_new_mammal, phylo_vcv[4], type = "pers_SSD")
 
