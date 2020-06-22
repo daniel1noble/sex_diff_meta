@@ -516,9 +516,7 @@ MLMR_models_pers_SSD_mammal <- meta_model_fits(pers_new_mammal, phylo_vcv[4], ty
     group_by(taxo_group, personality_trait, mating_system) %>%
     summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
     
-# combine multiple mating systems into 1 category - multiple mating because most pers levels don't have enough data for comparison with the current split
-    #doing it by hand because coding it is so hard! 
-    # birds and boldness only one with enough data
+      # combine multiple mating systems into 1 category - multiple mating because most pers levels don't have enough data for comparison with the current split
 
 # check how much I can compare overall mean differences
 pers_new %>%
@@ -526,7 +524,7 @@ pers_new %>%
     summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
     # probably only have enough data for birds 
 
-# First let's run the model with mating system and overall personality means/variability just to check
+# Let's run the model with mating system and overall personality means/variability just to check
 
 MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
 
@@ -534,31 +532,6 @@ MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "p
     smd_mods_mating_system <- MLMR_models_pers_mating_system["SMD",]
   lnCVR_mods_mating_system <- MLMR_models_pers_mating_system["lnCVR",]
 
-# Second, we can look at how mating system moderates boldness in birds - the one group we have enough data for
-   # subset dataset
-  pers_new_bird_bold <- as.data.frame(pers_new %>%
-    filter(personality_trait == "boldness" & taxo_group == "bird"))
-  
-  # Check that this has been done correctly
-      pers_new_bird_bold %>%
-      group_by(mating_system) %>%
-      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
-
-  # phylo_vcv - let's just see if we can use the same tree like with mammals
-     phylo_vcv_bird <- phylo_vcv[[1]]
-  
-  # run the models 
-#SMD
-  MLMR_mods_pers_mate_bird_SMD <- rma.mv(SMD_yi_flip ~ mating_system -1, V = SMD_vi, 
-                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                          R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
-                                          test = "t", data = pers_new_bird_bold)
-
-#lnCVR
-  MLMR_mods_pers_mate_bird_lncvr <- rma.mv(CVR_yi ~ mating_system -1, V = CVR_vi, 
-                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                            R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
-                                            test = "t", data = pers_new_bird_bold)
 ```
 
 # 9. parental care - models weren't very informative/lacked data/difficult to run so these have been removed from analysis 
@@ -600,7 +573,6 @@ summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(un
   smd_mods_pers_pop <- MLMR_models_pers_pop["SMD",]
   lnCVR_mods_pers_pop <- MLMR_models_pers_pop["lnCVR",]
   
-# how to swap the levels and compare them???
 ```
 
 # 10c. Secondary model 3 - Study Environment
