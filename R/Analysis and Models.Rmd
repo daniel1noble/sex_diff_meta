@@ -971,7 +971,9 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
 # 1. funnel plot for all our effect sizes?
   # looks for asymmetry in effect sizes - could be due to heterogeneity or publication bias
     # SMD:
-    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis = "seinv")
+       res <- residuals(model)
+       precision <- 1/pers_new$SMD_vi
+    funnel(x = res, vi = pers_new$SMD_vi, yaxis = "seinv")
 
     # lnCVR:
     funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
