@@ -1143,7 +1143,7 @@ bird_plot <- gheatmap(p, birds_matrix, offset = 40,
           colnames_angle=60, colnames_offset_y = 1, 
           hjust=0, font.size=2)
 
-ggsave("birdphylo.pdf", dpi = 300) #saves how it looks in the plot window
+ggsave("birdphylo.pdf") #saves how it looks in the plot window
 
 # need to include legend titles (ssd index for nodes, n effect sizes for pers traits heat map) 
   # will also need to indicate where species have been substituted** important
@@ -1168,7 +1168,7 @@ bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab
 bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, N = "none", transfm = "none") 
 
 # window size - birds and mammals will have plots side by side
-dev.new(width=8,height=4,noRStudioGD = TRUE)
+dev.new(width=9,height=4,noRStudioGD = TRUE)
 
 # trying ggarrange()
 bird_effects <- ggarrange(bird_SMD, bird_lncvr, nrow = 1, align = "hv", labels = "a") # still can't get rid of those axis labels
@@ -1374,7 +1374,10 @@ p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish
   fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "SMD", angle = 45, alpha = 0.5, transfm = "none")  
 #lncvr
   fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "lnCVR", angle = 45, alpha = 0.5, transfm = "none")
-        
+
+dev.new(width=10,height=5,noRStudioGD = TRUE)
+  
+fish_SMD + fish_lncvr + plot_layout(guides = 'collect')          
 ```
 
 # inverts
@@ -1401,7 +1404,7 @@ rownames(invert_data) <- pruned.inverttree$tip.label
 p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% invert_data + 
   geom_tippoint(aes(color=SSD_index)) + 
   scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
-  geom_tiplab2(align=T, linetype=NA, size=2, offset=15, hjust=0.5) +
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=20, hjust=0.5) +
   theme(legend.position = "right")
 
 # make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
@@ -1514,6 +1517,16 @@ ggsave("bird_orchards.pdf", dpi = 300)
 
 # try to plot phylo with the legend off the phylo - should make it smaller
 
+# best sizes for things:
+ #phylo (birds and mammals)
+dev.new(width=7, height=6,noRStudioGD = TRUE)
+
+# phylo (ectotherms)
+dev.new(width=6,height=5,noRStudioGD = TRUE)
+
+# orchard plots
+dev.new(width=10,height=5,noRStudioGD = TRUE) 
+  # invert_SMD + invert_lncvr + plot_layout(guides = 'collect') # use the plot_layout bit to collect the precision legends at the end
 ```
 
 # DONE!
