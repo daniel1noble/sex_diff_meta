@@ -987,9 +987,14 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
 
 # precision is significant only for invertebrates (SMD but not lnCVR) - makes sense since inverts often have the largest sample sizes
   
-   # extract residuals from model to plot in funnel - not working because it's a fucking list
+   # extract residuals from model to plot in funnel - not working because it's a list 
   res_smd <- rstandard(smd_mods_pubbias) #SMD
   res_lncvr <- rstandard(lnCVR_mods_pubbias) #lnCVR
+  
+  # extract residuals from all the models at the same time using modified function and split by taxo group
+   taxa_list <- split(data, data$taxo_group)
+   persmodel_res <- mapply(function(x, y) fit_MLMA_reg_models_studytype(x, y), x = taxa_list, y = phylo_vcv)
+   res_SMD <- plyr::ldply(lapply(smd_mods_pubbias, function(x) print(mod_results(x, mod = "Int"))))
   
   # funnel it
   #SMD
