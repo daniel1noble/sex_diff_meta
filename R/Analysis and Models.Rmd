@@ -966,37 +966,35 @@ funnel(x = pers_new_outliers$SMD_yi, vi = pers_new_outliers$SMD_vi, yaxis="seinv
 # 12. Publication bias
 We can use: 1) funnel plots to look for asymmetry across all effect sizes for both SMD and lnCVR, 2) Egger's test which performs a regression test on our funnel plots ... but maybe not useful when there is high heterogeneity NOT caused by publication bias (which I think is the case for our data), and 3) trim and fill method to estimate the number of missing effect sizes and uses the asymmetry to add more points and provide a revised overall mean.
 
+We have included precision as a moderator term in our full model (personality trait MLMA model) to see if studies with larger sample sizes (greater precision) are published significantly more often than studies with smaller sample sizes. The logic is that studies with larger sample sizes can have significant results due to chance (more sampling = greater chance of finding something significant) or that journals are more likely to publish studies with significant results and large sample sizes. 
+
 see: http://environmentalcomputing.net/meta-analysis-2/ for more information about publication bias methods. 
 ```{r}
 # 1. funnel plot for all our effect sizes?
   # looks for asymmetry in effect sizes - could be due to heterogeneity or publication bias
-    # SMD:
-       res <- residuals(model)
-       precision <- 1/pers_new$SMD_vi
-    funnel(x = res, vi = pers_new$SMD_vi, yaxis = "seinv")
+          res <- residuals(model) #residuals extractor?
+ 
+ # adding precision to dataset as a moderator term
+       pers_new$precision <- 1/sqrt(pers_new$SMD_vi) # use this as a moderator in our full model
+   
+# assess publication bias in SMD and lnCVR effect sizes seperately:
 
-    # lnCVR:
-    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
-    
-  # funnels with full personality model
-    # SMD
-    plot(MLMR_models_pers_trait[1], qq= TRUE)
+  MLMR_models_pers_pubbias <- meta_model_fits(pers_new, phylo_vcv, type = "pubbias")
+  
+# Extract the SMD and lnCVR results
+    smd_mods_pubbias <- MLMR_models_pers_pubbias["SMD",]
+  lnCVR_mods_pubbias <- MLMR_models_pers_pubbias["lnCVR",]
 
-# 2. Egger's test - regression test
-      # applies a regression test to the funnel plots to provide a z score and p-value for likelihood of publication bias
-    # SMD:
-    regtest(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, model='rma') #significant, suggests pub. bias z= -2.79, p=0.005
-      
-    # lnCVR:
-    regtest(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, model='rma') #NS z= -0.03, p=0.97
-    
-  # looking at model residuals for our intercept models
-# SMD
-    #coef(smd_mods) doesn't give us anything - might have to run models another way?
-    
-# 3. Trim-and-fill
-  # uses funnel asymmetry to add more points (randomly or in another manner) and provides a revised overall mean for models 
-    # can I use this method?
+# precision is significant only for invertebrates (SMD but not lnCVR) - makes sense since inverts often have the largest sample sizes
+  
+   # extract residuals from model to plot in funnel - not working because it's a fucking list
+  res_smd <- rstandard(smd_mods_pubbias) #SMD
+  res_lncvr <- rstandard(lnCVR_mods_pubbias) #lnCVR
+  
+  # funnel it
+  #SMD
+   funnel(x = res_smd, vi = pers_new$SMD_vi, yaxis = "seinv") 
+
 ```
  
 # 13. Making plots

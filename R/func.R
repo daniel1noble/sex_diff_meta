@@ -25,6 +25,15 @@ fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
           			lnCVR = lnCVR))
 }
 
+fit_MLMA_reg_models_pubbias <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + precision, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + precision, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
+
 fit_MLMA_reg_models_personality_trait_SSD_index <- function(data, phylo_vcv){
           lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
 
@@ -137,7 +146,7 @@ sensitivity_mod2 <- function(data, phylo_vcv){
 }
 
 # This function takes the dataset, splits the dataset up by broad taxonomic group and applies a specified meta-analytic or meta-regression model to each taxa (seee functions for models above), saving the model results into a list that can be used down stream
-meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care", "age", "pop", "environ", "study_type", "score", "proportion")){
+meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD", "pers_mate", "parent_care", "age", "pop", "environ", "study_type", "score", "proportion", "pubbias")){
          taxa_list <- split(data, data$taxo_group)
 
       type <-  match.arg(type)
@@ -184,6 +193,10 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
       
       if(type == "proportion"){
         model_fits <- mapply(function(x, y) sensitivity_mod2(x, y), x = taxa_list, y = phylo_vcv)
+      } 
+      
+      if(type == "pubbias"){
+        model_fits <- mapply(function(x, y) fit_MLMA_reg_models_pubbias(x, y), x = taxa_list, y = phylo_vcv)
       } 
       
    return(model_fits)
