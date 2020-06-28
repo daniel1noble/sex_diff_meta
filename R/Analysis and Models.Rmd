@@ -987,7 +987,7 @@ see: http://environmentalcomputing.net/meta-analysis-2/ for more information abo
 
 # precision is significant only for invertebrates (SMD but not lnCVR) - makes sense since inverts often have the largest sample sizes
   
-   # extract residuals from model to plot in funnel - not working because it's a list 
+   # extract residuals from model to plot in funnel - not working because it's a list - work out how to do this one!!!
   res_smd <- rstandard(smd_mods_pubbias) #SMD
   res_lncvr <- rstandard(lnCVR_mods_pubbias) #lnCVR
   
