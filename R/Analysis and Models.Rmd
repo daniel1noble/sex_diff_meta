@@ -233,7 +233,7 @@ For each taxonomic group the phylogenetic trees have been constructed. We'll use
       
       other_groups <- mapply(x = taxa_data_list, 
                              y = trees, 
-                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks")) #suddenly getting an error??
 
           #Print out each taxon group
       for(i in colnames(other_groups)){
@@ -737,8 +737,8 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
     D_matrices_0.8 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.8))
   
   # NOTE: Lauren –Have a look and make sure these matrices are correct. You should see correlations for numbers within studies that match. Usually these are blocks of effects along the diagonal. IF you have ones far away form the signal, then you need to check these. Here is an example with reptiles
-    corrplot(D_matrices_0.3[[5]], tl.cex= 0.3) # Reptiles
-    write.csv(D_matrices_0.3[[5]], "reptiles_D_0.3.csv") # Can write it and have a closer look too
+    #corrplot(D_matrices_0.3[[5]], tl.cex= 0.3) # Reptiles
+    #write.csv(D_matrices_0.3[[5]], "reptiles_D_0.3.csv") # Can write it and have a closer look too
 
     #Once happy with the D matrices you can refit models, but just modify as follows:
 
@@ -748,12 +748,12 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
           lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
             random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
             R = list(spp_name_phylo=y, obs = z), 
-            data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8)
+            data = x), x = split_taxa, y = phylo_vcv, z = D)
 
             SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
               random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
               R = list(spp_name_phylo=y, obs = z), 
-              data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8) 
+              data = x), x = split_taxa, y = phylo_vcv, z = D) 
 
           return(list(SMD = SMD, 
                 lnCVR = lnCVR))
@@ -762,38 +762,17 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
    ob <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
 
    split_taxa <- split(pers_new, pers_new$taxo_group)
-    smd_mods_D <- ob["SMD",]
+    smd_mods_D <- ob["SMD",] #these don't work
   lnCVR_mods_D <- ob["lnCVR",] 
 
+  MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, function(x) print(mod_results(x, mod = "Int"))))
+  
 pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_matrices_0.8)   
   
   smd_pers_mods_D <- pers_trait_D["SMD",]
   lnCVR_pers_mods_D <- pers_trait_D["lnCVR",] 
    
-# Intercept models
-   # break these up for each taxo group
-    birds_fit_pers_trait_MLMAmodel_D <- function(data, phylo_vcv, D){
-
-          lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, 
-            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-            R = list(spp_name_phylo=y, obs = z), 
-            data = x), x = pers_new_bird, y = phylo_vcv, z = D_matrices_0.8)
-
-            SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
-              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-              R = list(spp_name_phylo=y, obs = z), 
-              data = x), x = pers_new_bird, y = phylo_vcv, z = D_matrices_0.8) 
-
-          return(list(SMD = SMD, 
-                lnCVR = lnCVR))
-}   
-    
-  birds_fit_pers_trait_MLMAmodel_D(pers_new_bird, phylo_vcv[1], D_matrices_0.8[1]) #error
- 
-   split_taxa <- split(pers_new, pers_new$taxo_group)
-    smd_pers_mods_D <- fit_pers_trait_MLMAmodel_D["SMD",]
-  lnCVR_pers_mods_D <- fit_pers_trait_MLMAmodel_D["lnCVR",]  
-    
   # rewrite function to split model by taxa and give us the summary
   meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
          taxa_list <- split(data, data$taxo_group)
@@ -816,7 +795,7 @@ pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_m
 } 
 
 # intercept models with rho = 0.5 
-MLMA_models_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.5, type = "int") # object D is missing??
+MLMA_models_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.8, type = "int") # elements of R must have dimension names
 
 split_taxa <- split(pers_new, pers_new$taxo_group)
     smd_mods_D <- MLMA_models_D["SMD",]
@@ -908,58 +887,6 @@ pers_new$proportion <- ifelse(is.na(pers_new$proportion), 0, 1)
   summarise(n = n())) #good to go
   
   # rerun intercept model, pers_trait model and SSD models
-
-```
-
-# removing outliers to check model robustness
-```{r}
-# we observed some outliers in the SMD and lnCVR dataset - let's try removing the following and checking the model results:
-# outliers (SMD):
-    # obs 509 (-23 for SMD) - in P015 and is correct/ genuine strong difference
-    # obs 128 (27.87 inverse SE) - in P041: is a score for aggression, but looks correct
-    # obs 120 (also high inverse SE) - in P091: looks correct, females have more variation than males, but same means
-    # obs 41 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
-    # obs 42 (big SMD difference, low error) - in P017: is correct, males were active for much longer than females (check error)
-    # obs 136 (big SMD, high error?) - in P165: SCORE - big sample size, precise data
-    # obs 121 (no mean diff, small error) - in P041: SCORE - big sample size, big SD
-    # obs 301 (no mean diff, small error) - in P211: exploration time, big sample sizes so high precision?
-    # obs 603 (no mean diff, small error) - in P097 or P157?
-# more SMD outliers
-  # P038 is correct as reported in paper, but is a proportion
-  # P029 has male SD wrong - paper says 64.4 but was recorded as 0.001 for some reason - amended in pers dataset
-  # P017 is correct
-  # P021 looks weird in paper too but is correct
-  # P136 is correct
-  # P014 is correct
-  # P029 male error looks too small
-  # P165 is a boldness score
-  # P015 6 effect sizes are proportions, the rest change direction (check figures though)
-  # P003 both effect sizes are aggression scores
-# outliers (lnCVR):
-    # obs 120 - in P041? - really big sample size, small error (so precise?)
-    # obs 128 - in P041 - aggression SCORE, again big sample size and small error
-    # obs 124 - in P041 - same thing
-    # obs 121 - also in P041
-    # obs 136 - in P165 - score, males and females have the same error from a really big sample size (check this one out)
-
-# let's try just removing all outliers that aren't scores or proportion first since we will be checking those too
- #pers_new_outliers <- as.data.frame(pers_new %>%
-    #filter(!study_ID == "P029" | !study_ID == "P014" | !study_ID == "P136" | !study_ID == "P021" | !study_ID == "P017" 
-           #| !study_ID == "P015" | !study_ID == "P091" | !study_ID == "P211"))
-dim(pers_new_outliers) # didn't work
-dim(pers_new)
-
-# plot the funnel to see if it looks any better
-funnel(x = pers_new_outliers$SMD_yi, vi = pers_new_outliers$SMD_vi, yaxis="seinv")
- text(as.character(pers_new_outliers$obs), x = pers_new_outliers$SMD_yi, y = 1/sqrt(pers_new_outliers$SMD_vi), offset = 0.8)
- # a lot of the outliers are scores and proportions, so we will deal with them later
- 
-# rerun intercept models first to check
-      MLMR_models_pers_outliers <- meta_model_fits(pers_new_outliers, phylo_vcv, type = "int")
-
-# Extract the SMD and lnCVR results
-    smd_mods_outliers <- MLMR_models_pers_outliers["SMD",]
-  lnCVR_mods_outliers <- MLMR_models_pers_outliers["lnCVR",]
 
 ```
 
