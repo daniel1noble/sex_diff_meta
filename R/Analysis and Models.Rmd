@@ -746,27 +746,29 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
     fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
 
           lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
-            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-            R = list(spp_name_phylo=y, obs = z), 
-            data = x), x = split_taxa, y = phylo_vcv, z = D)
+           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+           R = list(spp_name_phylo=y, obs = z), 
+           data = x), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
 
             SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
               random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
               R = list(spp_name_phylo=y, obs = z), 
-              data = x), x = split_taxa, y = phylo_vcv, z = D) 
+              data = x), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
 
-          return(list(SMD = SMD, 
-                lnCVR = lnCVR))
+          return(list(SMD=SMD, 
+                      lnCVR = lnCVR))
 }
 
    ob <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
 
    split_taxa <- split(pers_new, pers_new$taxo_group)
-    smd_mods_D <- ob["SMD",] #these don't work
-  lnCVR_mods_D <- ob["lnCVR",] 
-
-  MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, function(x) print(mod_results(x, mod = "Int")))) 
-  MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, function(x) print(mod_results(x, mod = "Int"))))
+    smd_mods_D <- ob[["SMD"]] #these don't work
+  lnCVR_mods_D <- ob[["lnCVR"]] 
+smd_mods_D <- ob[[1]]
+  MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, 
+                              function(x) print(mod_results(x, mod = "Int"))))
   
 pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_matrices_0.8)   
   
