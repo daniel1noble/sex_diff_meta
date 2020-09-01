@@ -360,6 +360,7 @@ if(rerun_models == TRUE){
   lnCVR_mods_pers_SSD <- MLMR_models_pers_SSD["lnCVR",]
 
 # Get the combined estimates from them all
+  # need to run revised orchard functions to get this #
    MLMA_estimates_SMD_SSD <- plyr::ldply(lapply(smd_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
  MLMA_estimates_lnCVR_SSD <- plyr::ldply(lapply(lnCVR_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
 
@@ -527,6 +528,14 @@ pers_new %>%
 # Let's run the model with mating system and overall personality means/variability just to check
 
 MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+
+# save output to make life easier
+if(rerun_models == TRUE){
+      MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+      saveRDS(MLMR_models_pers_SSD, "./output/MLMR_models_pers_mating_system")
+    } else{
+      MLMR_models_pers_SSD <- readRDS("./output/MLMR_models_pers_mating_system")
+    }
 
 # Extract the SMD and lnCVR results
     smd_mods_mating_system <- MLMR_models_pers_mating_system["SMD",]
