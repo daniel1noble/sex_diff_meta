@@ -15,7 +15,6 @@ Anas_rhynchotis,bird,1,0.037,0,0,1,0,0
 Anser_anser,bird,1,0.129,0,0,1,0,0
 Aphanius_fasciatus,fish,10,0.006,1,0,1,0,0
 Aphanius_iberus,fish,5,-0.085,0,1,0,0,0
-Aquarius_remigis,invertebrate,5,-0.075,1,0,1,0,0
 Asellus_aquaticus,invertebrate,6,0.351,1,0,1,0,0
 Ateles_geoffroyi,mammal,13,0.067,0,1,1,0,1
 Ateles_hybridus,mammal,11,NA,0,1,0,0,1
@@ -119,7 +118,6 @@ Microtus_arvalis,mammal,4,0.174,0,0,1,1,0
 Microtus_guentheri,mammal,15,0.032,0,0,0,1,0
 Microtus_ochrogaster,mammal,3,-0.002,0,0,1,0,0
 Miliaria_calandra,bird,2,0.221,0,0,1,0,0
-Molothrus_ater,bird,3,0.268,0,0,0,0,1
 Motacilla_alba,bird,2,0.129,0,0,1,0,0
 Motacilla_cinerea,bird,2,0.047,0,0,1,0,0
 Motacilla_flava,bird,1,0.145,0,0,1,0,0
@@ -190,6 +188,7 @@ Sciurus_vulgaris,mammal,6,-0.035,0,0,1,0,0
 Serinus_serinus,bird,2,0.025,0,0,1,0,0
 Sialia_mexicana,bird,1,-0.048,0,1,0,0,0
 Sialia_sialis,bird,1,NA,0,1,0,0,0
+Sitophilus_granarius,invertebrate,30,-0.035,0,0,0,1,0
 Sitta_europaea,bird,1,0.034,0,0,1,0,0
 Sphaeromides_virei,invertebrate,5,0.46,1,0,0,0,0
 Spheniscus_demersus,bird,4,0.118,0,1,1,0,0

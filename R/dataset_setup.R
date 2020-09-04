@@ -112,8 +112,12 @@ source("./R/func.R")
     fem + scale_x_continuous(trans = 'log10')
       + scale_y_continuous(trans = 'log10')
     
+    # mean and SD on log scale to calculate correlation
+    logfemale_mean <- log(pers_new$female_mean_conv)
+    logfemale_SD <- log(pers_new$female_sd_conv)
+    
     # correlation between mean and SD
-    cor(pers_new$female_mean_conv, pers_new$female_sd_conv) #0.53
+    cor(logfemale_mean, logfemale_SD) #0.91
   
   # Males
     # use ggplot to make a scatterplot of females
@@ -123,10 +127,14 @@ source("./R/func.R")
     male + scale_x_continuous(trans = 'log10')
     + scale_y_continuous(trans = 'log10')
     
+    # mean and SD on log scale to calculate correlation
+    logmale_mean <- log(pers_new$male_mean_conv)
+    logmale_SD <- log(pers_new$male_sd_conv)
+    
     # correlation between mean and SD
-    cor(pers_new$male_mean_conv, pers_new$male_sd_conv) #0.50
+    cor(logmale_mean, logmale_SD) #0.90
       
-    # maybe not the strongest correlation but about as strong as Tarka et al have, and they also used lnCVR
+    # wow
     
 # see 'pers_new.csv' for final dataset
 
