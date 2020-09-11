@@ -550,9 +550,9 @@ MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "p
 # save output to make life easier
 if(rerun_models == TRUE){
       MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
-      saveRDS(MLMR_models_pers_SSD, "./output/MLMR_models_pers_mating_system")
+      saveRDS(MLMR_models_pers_mating_system, "./output/MLMR_models_pers_mating_system")
     } else{
-      MLMR_models_pers_SSD <- readRDS("./output/MLMR_models_pers_mating_system")
+     MLMR_models_pers_mating_system <- readRDS("./output/MLMR_models_pers_mating_system")
     }
 
 # Extract the SMD and lnCVR results
@@ -775,29 +775,153 @@ MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi,
           lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
            R = list(spp_name_phylo=y, obs = z), 
-           data = x), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+           data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
 
             SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
               random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
               R = list(spp_name_phylo=y, obs = z), 
-              data = x), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+              data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
 
           return(list(SMD=SMD, 
                       lnCVR = lnCVR))
 }
 
+    # intercept mods - rho=0.8
    ob <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
 
    split_taxa <- split(pers_new, pers_new$taxo_group)
-    smd_mods_D <- ob[["SMD"]] #these don't work
+    smd_mods_D <- ob[["SMD"]] 
   lnCVR_mods_D <- ob[["lnCVR"]] 
 smd_mods_D <- ob[[1]]
   MLMA_estimates_SMD_D <- plyr::ldply(lapply(smd_mods_D, 
                            function(x) print(mod_results(x, mod = "Int")))) 
   MLMA_estimates_lnCVR_D <- plyr::ldply(lapply(lnCVR_mods_D, 
                               function(x) print(mod_results(x, mod = "Int"))))
+ 
+  # intercept mods - rho=0.5
+  ob2 <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.5)
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_0.5 <- ob2[["SMD"]] 
+  lnCVR_mods_D_0.5 <- ob2[["lnCVR"]] 
   
-pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_matrices_0.8)   
+  #extract PR
+  MLMA_estimates_SMD_D_0.5 <- plyr::ldply(lapply(smd_mods_D_0.5, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_D_0.5 <- plyr::ldply(lapply(lnCVR_mods_D_0.5, 
+                              function(x) print(mod_results(x, mod = "Int"))))
+  
+  # intercept mods - rho=0.3
+  ob3 <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.3)
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_0.3 <- ob3[["SMD"]] 
+  lnCVR_mods_D_0.3 <- ob3[["lnCVR"]] 
+  
+  #extract PR
+  MLMA_estimates_SMD_D_0.5 <- plyr::ldply(lapply(smd_mods_D_0.3, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_D_0.5 <- plyr::ldply(lapply(lnCVR_mods_D_0.3, 
+                              function(x) print(mod_results(x, mod = "Int"))))
+  
+  # Pers traits models
+    fit_int_MLMAmodel_D_pers <- function(data, phylo_vcv, D){
+
+          lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, 
+           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+           R = list(spp_name_phylo=y, obs = z), 
+           data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+
+            SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
+              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+              R = list(spp_name_phylo=y, obs = z), 
+              data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+
+          return(list(SMD=SMD, 
+                      lnCVR = lnCVR))
+}
+  
+
+   # pers mods - rho=0.8
+  pers_0.8 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.8)
+    
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.8 <- pers_0.8[["SMD"]] 
+  lnCVR_mods_D__pers_0.8 <- pers_0.8[["lnCVR"]] 
+  
+  #extract PR
+  MLMA_estimates_SMD_pers_D_0.8 <- plyr::ldply(lapply(smd_mods_D_pers_0.8, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_pers_D_0.8 <- plyr::ldply(lapply(lnCVR_mods_D__pers_0.8, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+    
+    # pers mods - rho=0.5
+  pers_0.5 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.5)
+    
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.5 <- pers_0.5[["SMD"]] 
+  lnCVR_mods_D__pers_0.5 <- pers_0.5[["lnCVR"]] 
+  
+  #extract PR
+  MLMA_estimates_SMD_pers_D_0.5 <- plyr::ldply(lapply(smd_mods_D_pers_0.5, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_pers_D_0.5 <- plyr::ldply(lapply(lnCVR_mods_D__pers_0.5, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+    
+    # pers mods - rho=0.3
+  pers_0.3 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.3)
+    
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.3 <- pers_0.3[["SMD"]] 
+  lnCVR_mods_D__pers_0.3 <- pers_0.3[["lnCVR"]] 
+  
+  #extract PR
+  MLMA_estimates_SMD_pers_D_0.3 <- plyr::ldply(lapply(smd_mods_D_pers_0.3, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_pers_D_0.3 <- plyr::ldply(lapply(lnCVR_mods_D__pers_0.3, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+  
+    # Pers*SSD traits models
+    fit_int_MLMAmodel_D_pers_ssd <- function(data, phylo_vcv, D){
+
+          lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, 
+           random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+           R = list(spp_name_phylo=y, obs = z), 
+           data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+
+            SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ -1+ personality_trait*SSD_index, V = SMD_vi, 
+              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+              R = list(spp_name_phylo=y, obs = z), 
+              data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+
+          return(list(SMD=SMD, 
+                      lnCVR = lnCVR))
+}
+    
+  # pers * ssd mods - rho=0.8
+  ssd_0.8 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.8)
+    
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_ssd_0.8 <- ssd_0.8[["SMD"]] 
+  lnCVR_mods_D__pers_ssd_0.8 <- ssd_0.8[["lnCVR"]] 
+  
+  #extract PR - need to change function structure here
+  MLMA_estimates_SMD_pers_ssd_D_0.8 <- plyr::ldply(lapply(smd_mods_D_pers_ssd_0.8, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+  MLMA_estimates_lnCVR_pers_ssd_D_0.8 <- plyr::ldply(lapply(lnCVR_mods_D__pers_ssd_0.8, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+    
+  # pers * ssd mods - rho=0.5
+  ssd_0.5 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.5)
+    
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_ssd_0.5 <- ssd_0.5[["SMD"]] 
+  lnCVR_mods_D__pers_ssd_0.5 <- ssd_0.5[["lnCVR"]] 
+  
+  # pers * ssd mods - rho=0.3
+  ssd_0.3 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.3)
+  
+  ##### all of this is junk ####
+  
+  #pers_trait_D <- fit_MLMA_reg_models_personality_trait_D(pers_new, phylo_vcv, D_matrices_0.8)   
   
   smd_pers_mods_D <- pers_trait_D["SMD",]
   lnCVR_pers_mods_D <- pers_trait_D["lnCVR",] 
@@ -854,69 +978,92 @@ MLMR_models_pers_trait_D <- meta_model_fits_D(pers_new, phylo_vcv, D_matrices_0.
 
 # Sensitivity analyses
 
-Here we are adding a moderator term for data that are a) scores, and b) proportions to see if they significantly influence the means of our intercept and pers traits models
+Here we are adding a moderator term for data that are scores to see if they significantly influence the means of our intercept and pers traits models
 ```{r}
-# ifelse statement for our two columns to make data into binary categories
-# scores
-pers_new$score <- ifelse(is.na(pers_new$score), 0, 1)
+# make a new column where data type is binary (score or other)
 
-    pers_new$score <- ifelse(pers_new$score == 1, "score", "other")
+    pers_new$score <- ifelse(pers_new$measurement_type == "score", "score", "other")
 
-# proportions    
-pers_new$proportion <- ifelse(is.na(pers_new$proportion), 0, 1)
-
-    pers_new$proportion <- ifelse(pers_new$proportion == 1, "proportion", "other")
-    
-# running simple models first
-  # scores
-  data.frame(pers_new %>%
-  group_by(taxo_group, score) %>%
-  summarise(n = n()))
+# how many effect sizes are scores?
+    data.frame(pers_new %>%
+    group_by(taxo_group, score) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))) 
   
     # model:
- sensitivity_mod1_score <- meta_model_fits(pers_new, phylo_vcv, type = "score")
+  sensitivity_mod1_score <- meta_model_fits(pers_new, phylo_vcv, type = "score")
 
     # Extract the SMD and lnCVR results
   smd_mods_score <- sensitivity_mod1_score["SMD",] #inverts significant :(
   lnCVR_mods_score <- sensitivity_mod1_score["lnCVR",] #inverts significant
   
-  # same direction but more significant for invert SMD and lnCVR
+  # only invert SMD is significantly affected by score data (slope is significantly different from rest of dataset)
   
-  # proportions
-  data.frame(pers_new %>%
-  group_by(taxo_group, proportion) %>%
-  summarise(n = n())) 
-  
-  # no reptiles with proportional data, drop those
-    pers_new_prop <- as.data.frame(pers_new %>%
-  filter(!taxo_group == "reptilia")) 
-    
-    phylo_vcv_prop <- phylo_vcv[-5]
-  
-    # model:
- sensitivity_mod2_prop <- meta_model_fits(pers_new_prop, phylo_vcv_prop, type = "proportion")
- 
-    # Extract the SMD and lnCVR results
-  smd_mods_prop <- sensitivity_mod2_prop["SMD",] 
-  lnCVR_mods_prop <- sensitivity_mod2_prop["lnCVR",] 
+  # as a check, let's rerun our 3 main models with score data removed for inverts
 
-  # fish and inverts have significantly different effect sizes for proportional data than other data (same direction for fish and invert SMD, opposite direction for invert lnCVR)
-  #############################
-  # let's rerun our 3 main models excluding scores and proportions to see how they change things (expect to see differences for inverts, maybe fish, but also for some personality traits like boldness or aggression)
+     # filter dataset by invert taxa group and filter out scores 
+    invert_noscore <- as.data.frame(pers_new %>%
+    filter(taxo_group == "invertebrate" & !score == "score")) 
+  
+   # rerun intercept model, pers_trait model and SSD models
     
-  # additionally, removing scores and proportional data/effect sizes will remove most of the outliers we've flagged in our data, and likely resolve the large smapling variance ratios flagged in the models.
-  
-  # filter out scores and proportions from dataset
- pers_new <- as.data.frame(pers_new %>%
-  filter(!score == "score" & !proportion == "proportion")) 
-  
-  # check this has been done correctly
-  data.frame(pers_new %>%
-  group_by(taxo_group, proportion, score) %>%
-  summarise(n = n())) #good to go
-  
-  # rerun intercept model, pers_trait model and SSD models
+    # phylo
+  phylo_vcv_invert <- phylo_vcv[[3]]
+    
+      #1. intercept mod
+  #SMD
+    invert_mod1_smd <- rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_noscore)
+  #lncvr
+    invert_mod1_lncvr <- rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_noscore)
+     
+    #2. MLMR mod with pers traits 
+  #SMD
+    invert_mod2_smd <- rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_noscore)
+  #lncvr
+    invert_mod2_lncvr <- rma.mv(CVR_yi ~ personality_trait -1, V = CVR_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_noscore)
+    
+    # what does the dataset look like for invert traits now?
+    data.frame(invert_noscore %>%
+    group_by(personality_trait) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))) 
+    
+      # enough species to look at boldness and activity for SSD interactions
+    
+     # subset dataset
+      invert_noscore <- as.data.frame(invert_noscore %>%
+      filter(personality_trait == "activity" | personality_trait == "boldness"))
+    
+    # Check that this has been done correctly
+      invert_noscore %>%
+      group_by(personality_trait) %>%
+      filter(!is.na(SSD_index))%>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))
+    
+      #3. SSD reduced model  
+      
+#SMD
+  invert_mod3_smd <- rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_noscore)
 
+#lnCVR
+ invert_mod3_lncvr <- rma.mv(CVR_yi ~ -1 + personality_trait*SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                            test = "t", data = invert_noscore)    
+      
 ```
 
 # 12. Publication bias
