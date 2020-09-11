@@ -76,7 +76,6 @@ Eospalax_smithii,mammal,30,NA,0,0,1,0,0
 Epthianura_albifrons,bird,1,0.014,0,0,1,0,0
 Eriocheir_sinensis,invertebrate,2,0.021,1,0,1,0,0
 Eris_militaris,invertebrate,52,-0.03,1,0,0,0,0
-Euprymna_scolopes,invertebrate,2,0.009,0,0,1,0,0
 Falco_tinnunculus,bird,1,-0.196,0,0,1,0,0
 Ficedula_hypoleuca,bird,5,-0.218,0,0,1,0,0
 Fringilla_coelebs,bird,7,0.048,0,0,1,0,0
@@ -88,7 +87,6 @@ Gammarus_fossarum,invertebrate,9,0.096,1,0,1,1,0
 Gasterosteus_aculeatus,fish,5,-0.064,0,0,1,1,1
 Gerris_marginatus,invertebrate,2,-0.152,0,0,1,0,0
 Grallina_cyanoleuca,bird,1,0.127,0,0,1,0,0
-Gryllus_bimaculatus,invertebrate,4,-0.019,0,1,0,1,0
 Gymnorhina_tibicen,bird,1,NA,0,0,1,0,0
 Heterodontus_francisci,fish,2,-0.143,0,1,0,0,0
 Himantopus_himantopus,bird,1,0.013,0,0,1,0,0
@@ -139,7 +137,6 @@ Pan_troglodytes,mammal,16,0.031,0,1,1,0,1
 Panopeus_herbstii,invertebrate,5,0.014,0,0,1,0,0
 Pantherophis_obsoletus,reptilia,2,0.12,1,0,0,0,0
 Pararge_aegeria,invertebrate,44,-0.334,1,0,1,1,0
-Parasteatoda_tepidariorum,invertebrate,1,-0.109,0,1,0,0,0
 Parus_caeruleus,bird,9,0.064,0,1,1,1,0
 Parus_major,bird,41,0.03,1,1,1,1,0
 Parus_palustris,bird,1,0.073,0,0,1,0,0
@@ -207,8 +204,6 @@ Tadorna_tadorna,bird,1,0.209,0,0,1,0,0
 Taeniopygia_guttata,bird,97,-0.056,1,1,1,1,1
 Tamias_sibiricus,mammal,2,0.002,0,0,1,0,0
 Tamias_striatus,mammal,3,-0.007,1,0,0,1,0
-Tegenaria_atrica,invertebrate,1,-0.124,0,0,1,0,0
-Tenebrio_molitor,invertebrate,12,0.049,1,0,1,1,1
 Terrapene_carolina,reptilia,3,0.003,0,0,1,0,0
 Thamnophis_sirtalis,reptilia,2,-0.192,1,0,0,1,0
 Theropithecus_gelada,mammal,18,0.871,0,0,0,0,1
