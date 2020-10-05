@@ -1,8 +1,11 @@
 ---
-title: "Males are not the more variable sex when it comes to personality - Data checks, analysis and meta-a models"
+title: Males are not the more variable sex when it comes to personality - Data checks,
+  analysis and meta-a models
 author: "Lauren Harrison, Daniel Noble & Michael Jennions"
 date: "01/09/2020"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,11 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 # 1. Load packages
 ```{r}
 # Clear work space
-  #rm(list=ls())
+  rm(list=ls())
 
-# set working directory to Git project folder
-  setwd("~/Documents/GitHub/sex_meta")
-
+# set mirror
+  local({r <- getOption("repos")
+  r["CRAN"] <- "http://cran.r-project.org"
+  options(repos=r)})
+  
 # Install CRAN packages
   install.packages("pacman")
 
@@ -35,6 +40,9 @@ rerun_models = FALSE
 
 # 2. Load datasets 
 ```{r}
+# If you don't want to go through all the set-up, just load pers_new which is already good to go - just skip ahead to step 6
+  #pers_new <- read.csv("./data/pers_new.csv", stringsAsFactors = FALSE)
+
 # load our original pers dataset and our dataset with all of our sexual selection info
   pers <- read.csv("./data/pers_data.csv", stringsAsFactors = FALSE)
   bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
