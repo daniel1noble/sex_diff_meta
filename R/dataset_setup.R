@@ -1,9 +1,9 @@
 #################################################
-# Setting up dataset used in Harrison et al. meta-analysis 
+# Setting up dataset used in Harrison et al. personality meta-analysis 
 # 31 August 2020
 #################################################
 
-# These datasets and the following code are used to create the final dataset 'pers_new' used for further meta-analysis. 
+# These datasets and the following code are used to create the final dataset 'pers_new' used for further analysis. 
 
 #################################################
 
@@ -133,8 +133,63 @@ source("./R/func.R")
     
     # correlation between mean and SD
     cor(logmale_mean, logmale_SD) #0.90
-      
-    # wow
+
+## 5. Checking for outliers
+  # lnCVR
+    hist(pers_new$CVR_yi)
+    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+  
+    #SMD
+    hist(pers_new$SMD_yi)
+    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+    text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
     
-# see 'pers_new.csv' for final dataset
+    
+    pers_new %>% 
+      filter(study_ID == "P231" & SMD_yi < -20) # P231 has 2 datapoints (proportions) with huge differences: -68 and -38 remove?
+    
+    # filter out those two large effect sizes
+    pers_new <- pers_new %>%
+      filter(!SMD_yi < -20)
+    dim(pers_new) 
+    
+    # check funnel once more 
+    pers_new %>% 
+      filter(study_ID == "P206" & SMD_yi < -15) # looks like a genuine effect size, I'm going to leave it in
+  
+    # checking SMD outliers - inverse SE > 14
+    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+    text(as.character(pers_new$obs), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi), offset = 0.8)
+    
+    # checking lnCVR outliers
+    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+    text(as.character(pers_new$obs), x = pers_new$CVR_yi, y = 1/sqrt(pers_new$CVR_vi), offset = 0.8) 
+      
+ # I noticed some measures are more physiological/not personality than personality, so I think it's wise to remove these before we run the models - just to be safe!
+    # P029 - obs 22, 23, 32 
+    # P084 - obs 59, 62, 63, 65, 68, 70, 71, 72, 74
+    # P060 - obs 216, 217
+    # P211 - obs 230, 245
+    # P117 - obs 397, 393, 402, 414
+    # P197 - obs 541, 544, 546, 547
+    # P069 - obs 669, 672, 673, 682, 683, 684, 686, 694 
+    
+    # remove these by study 
+    pers_new <- pers_new %>% filter(!study_ID == "P029" | !obs %in% c("22", "23", "32"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P084" | !obs %in% c("59", "62", "63", "65", "68", "70", "71", "72", "74"))
+    
+    pers_new <-  pers_new %>% filter(!study_ID == "P060" | !obs %in% c("216", "217"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P211" | !obs %in% c("230", "245"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P117" | !obs %in% c("397", "393", "402", "414"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P197" | !obs %in% c("541", "544", "546", "547"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P197" | !obs %in% c("669", "672", "673", "682", "683", "684", "686", "694")) 
+    
+    dim(pers_new) 
+        
+# see 'pers_new.csv' for final dataset after all these checks
 

@@ -1,0 +1,198 @@
+---
+title: "Data Analysis and Meta-A Models"
+author: "Lauren Harrison"
+date: "28/02/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Load packages
+```{r}
+# Install CRAN packages
+  install.packages("pacman")
+  pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta)
+
+# Install orchard plot package
+  devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE); library(orchaRd)
+  devtools::install_github("daniel1noble/metaAidR"); library(metaAidR)
+
+# Source our own functions
+  source("./R/func.R")
+```
+
+# 2. Load datasets
+```{r}
+pers <- read.csv("./data/pers_data.csv")
+head(pers)
+nrow(pers) # just to see how much data we started off with
+bodysize <- read.csv("./data/bodysize_SSD.csv")
+head(bodysize)
+```
+
+# 3. Fix "pers" dataset before we get started
+```{r}
+# remove whitespace
+  spp_names <- trimws(c(as.character(pers$species_name),
+                        as.character(bodysize$species_name), 
+                        which = "both"))
+
+# merge spp_names columns
+  pers <- merge(pers,bodysize[,c("species_name", "m_BS", "m_SE", "f_BS", "f_SE", "measure", "SSD_index", "mating_system", "parental_care")],by="species_name", all.x=TRUE,  no.dups = TRUE)
+  summary(pers)
+  nrow(pers) #
+
+#colnames(pers) <- gsub(".[xy]", "", colnames(pers))
+
+# Just select the relevant columns for now to make life easier
+  pers_new <- pers %>% select(study_ID, year, species_name, mating_system, parental_care, SSD_index, taxo_group, measure, data_type, personality_trait, male_n, male_mean, m_SE_to_SD, female_n, female_mean, f_SE_to_SD, depend, directionality)
+
+# Check out some outliers
+  pers_new %>%
+  filter(is.na(SSD_index))
+
+# Check species numbers
+  pers_new %>%
+  group_by(taxo_group.x) %>%
+  summarise(species = length(unique(species_name)))
+
+# Rename spp
+  pers_new <- pers_new %>% 
+              mutate(spp = gsub(" ", "_", species_name))
+
+  data.frame(pers_new %>% 
+  filter(!is.na(parental_care)) %>%
+  group_by(taxo_group, personality_trait, parental_care) %>%
+  summarise(studies = length(unique(study_ID)), effects = n()))
+
+# Add in observation level random effect
+  pers_new <- pers_new %>% 
+            group_by(taxo_group) %>% 
+            mutate(obs = 1:length( study_ID))
+```
+
+# 4. Calculate effect sizes (SMD and lnCVR)
+```{r}
+# calculating effect sizes
+
+# SMD (Hedge's g)
+  pers_new <- escalc(measure = "SMD", 
+                n1i = male_n, n2i = female_n,
+                m1i = male_mean, m2i = female_mean,
+                sd1i = m_SE_to_SD, sd2i = f_SE_to_SD, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
+
+# lnCVR
+  pers_new <- escalc(measure = "CVR",
+                       n2i = female_n, n1i = male_n,
+                       m2i = female_mean, m1i = male_mean,
+                       sd2i = f_SE_to_SD, sd1i = m_SE_to_SD, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
+
+# Find out why we have na? Seems like this is because SD in one of the sexes is zero. We could add a very small number here or assume 0 is NA and impute, but I would just exclude.
+  pers_new %>%
+  filter(is.na(CVR_yi))
+```
+
+# Plot effect sizes to see how they look
+```{r}
+# lnCVR
+  hist(pers_new$CVR_yi)
+  funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+
+#SMD
+  hist(pers_new$SMD_yi)
+  funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+
+# Effect sizes 3 and above
+  pers_new %>%
+  filter(SMD_yi > 3)
+```
+
+### NEED TO DO BEFORE RUNNING PROPER MODELS ### 
+1. Need to transform proportions to logits, then to Hedge's g? 
+2. Scores - cut them out?
+# Sensitivity analysis to see if proportion or score data make a difference to conclusions if you cut them out.
+3. Flip signs where indicated 
+# Yes!
+
+# Lets flip signs of effects for SMD
+The directional meaning of effect sizes vary depending on the specific units and trait being measured. The data has a directionality column that tells one if the meaning should be reversed (1) or left the same. 
+
+```{r}
+   pers_new$directionality <- ifelse(is.na(pers_new$directionality), 0, 1)
+
+      pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
+```
+# Prepare the phylogenic trees
+For each taxonomic group the phylogenetic trees have been constructed. We'll use these trees for multi-level meta-analytic models throughout. 
+
+```{r}
+    tree_files <- paste0("./trees/", list.files("./trees"))[-1]
+
+    trees <- lapply(tree_files, function(x) read.tree(x))
+    names(trees) <- list.files("./trees")
+
+    par(mfrow = c(1,5), mar = c(1,1,1,1))
+    lapply(trees, function(x) plot(x, cex = 1))
+
+    lapply(trees, function(x) is.ultrametric(x))
+
+    phylo_vcv <- lapply(trees, function(x) vcv(x, corr = TRUE))
+```
+
+# 5. models
+Let's run the first bunch of models on the whole dataset. We'll start off with intercept only multi-level meta-analytic models, then move to multi-level meta-regression models. The functions in `func.R` should be consulted to see precisely what models are being fit across the taxonomic groups
+
+```{r}
+# Now we can fit some models. First our MLMA intercept only models, across each taxa
+
+  MLMA_models <- meta_model_fits(pers_new, type = "int")
+
+# View model results. Warning messages exist because there are NA values for lnCVR. These can be removed from the data. We can also get from these models estimates of heterogeneity from our models. Here we need the sampling variance vector and also the models for SMD and CVR. We can then use multivariate apply (mapply) across these lists
+
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods <- lapply(MLMA_models, function(x) x$SMD)
+  lnCVR_mods <- lapply(MLMA_models, function(x) x$lnCVR)
+
+  I2_SMD <- mapply(function(x,y) I2(x, v = y$SMD_vi), x = smd_mods, y = split_taxa) # Should work, but you must remove NAs from data first
+  do.call("cbind", I2_SMD[,"bird"])
+  I2_CVR <- mapply(function(x,y) I2(x, v = y$lnCVR_vi), x = lnCVR_mods, y = split_taxa) # Should work, but you must remove NAs from data first
+  do.call("cbind", I2_CVR[,"bird"])
+
+# Now that we have our list of models, we can extract the estimates, CIs and even prediction intervals. Use our new orchaRd package to do this. 
+
+  MLMA_estimates <- lapply(MLMA_models, function(x) lapply(x, function(c) mod_results(c, mod = "Int")))
+
+  mod_result_table <- plyr::ldply(do.call("rbind", lapply(MLMA_estimates, function(x) lapply(x, function(c) print(c)))))
+
+# We can also extract I2 estimates, or estimates of heterogeneity from these models using the I2 function in metaAidR
+
+
+```
+
+# 6. Partition dataset into the "big 5" personality traits for each taxonomic group (25 different dataframes)
+
+
+# 7. Run random effects models for each of the personality traits separately, and for each of the taxonomic groups?
+
+# 8. Phylogenetic trees
+Tree for all the species together seems to be missing some species that aren't missing when the tree is made specifically for each taxonomic group... Use these taxa-specific trees instead?
+
+```{r}
+# trees
+
+# bird tree
+bird_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/bird_species.nwk")
+plot(bird_tree)
+
+mammal_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/mammal_species.nwk")
+
+rep_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/reptile_species.nwk")
+
+fish_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/fish_species.nwk")
+
+invert_tree <- read.tree("~/Dropbox/ANU PhD/2. Sex Variability in Personality Meta-Analysis/7. Meta-Analysis Datasets/Phylo_Data/invert_species.nwk")
+
+```
+

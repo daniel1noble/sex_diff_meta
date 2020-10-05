@@ -1,0 +1,19 @@
+source('~/Downloads/functions.R', chdir = TRUE)
+library(metaDigitise)
+metaDigitise
+library(metaDigitise)
+SSD <- metaDigitise("~/Desktop/body size figs/")
+SSD
+SSD <- metaDigitise
+SSD
+SSD <- metaDigitise("~/Desktop/body size figs/")
+install.packages("ape")
+install.packages("phangorn")
+install.packages("phytools")
+install.packages("geiger")
+library(devtools)
+library(ape)
+library(phytools)
+source("/Users/laurenharrison/Documents/GitHub/sex_meta/R/Analysis and Models.Rmd")
+getwd()
+install.packages("pacman")

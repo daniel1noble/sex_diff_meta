@@ -26,9 +26,9 @@ fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
 }
 
 fit_MLMA_reg_models_pubbias <- function(data, phylo_vcv){
-  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + precision, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + precisionlncvr, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
   
-  SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + precision, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + precisionSMD, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
   
   return(list(SMD = SMD, 
               lnCVR = lnCVR))
@@ -101,12 +101,12 @@ fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
     lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                                   R = list(spp_name_phylo=y, obs = z), 
-                                                  data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8)
+                                                  data = x), x = split_taxa, y = phylo_vcv, z = D)
   
   SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
                                                 random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
                                                 R = list(spp_name_phylo=y, obs = z), 
-                                                data = x), x = split_taxa, y = phylo_vcv, z = D_matrices_0.8) 
+                                                data = x), x = split_taxa, y = phylo_vcv, z = D) 
   
   return(list(SMD = SMD, 
               lnCVR = lnCVR))
@@ -201,6 +201,57 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
       
    return(model_fits)
 } 
+
+# D matrix intercept models
+fit_int_MLMAmodel_D <- function(data, phylo_vcv, D){
+  
+  lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ 1, V = CVR_vi, 
+                                                  random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+  
+  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ 1, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                R = list(spp_name_phylo=y, obs = z), 
+                                                data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+  
+  return(list(SMD=SMD, 
+              lnCVR = lnCVR))
+}
+
+# D matrix personality trait models
+fit_int_MLMAmodel_D_pers <- function(data, phylo_vcv, D){
+  
+  lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait-1, V = CVR_vi, 
+                                                  random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+  
+  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait-1, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                R = list(spp_name_phylo=y, obs = z), 
+                                                data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+  
+  return(list(SMD=SMD, 
+              lnCVR = lnCVR))
+}
+
+# D matrix personality trait x SSD models
+fit_int_MLMAmodel_D_pers_ssd <- function(data, phylo_vcv, D){
+  
+  lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, 
+                                                  random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
+  
+  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ -1+ personality_trait*SSD_index, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                R = list(spp_name_phylo=y, obs = z), 
+                                                data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
+  
+  return(list(SMD=SMD, 
+              lnCVR = lnCVR))
+}
 
 meta_model_fits_D <- function(data, phylo_vcv, D, type = c("int", "pers", "pers_SSD")){
   taxa_list <- split(data, data$taxo_group)

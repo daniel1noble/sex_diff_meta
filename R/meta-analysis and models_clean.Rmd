@@ -1,0 +1,1419 @@
+---
+title: "Males are not the more variable sex when it comes to personality - Data checks, analysis and meta-a models"
+author: "Lauren Harrison, Daniel Noble & Michael Jennions"
+date: "01/09/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Load packages
+```{r}
+# Clear work space
+  #rm(list=ls())
+
+# set working directory to Git project folder
+  setwd("~/Documents/GitHub/sex_meta")
+
+# Install CRAN packages
+  install.packages("pacman")
+
+# Install orchard plot package
+  devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE); 
+  devtools::install_github("daniel1noble/metaAidR"); 
+
+  pacman::p_load(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta, ape, geiger, phytools, phangorn, rlist, orchaRd, metaAidR, corrplot)
+
+# Source our own functions
+  source("./R/func.R")
+
+# Set the rerun object to FALSE so that you don't need to re-run all models again. Some take quite a lot of time to run. If FALSE, it will just re-load them. If you need to re-run, then simply just change to TRUE
+rerun_models = FALSE
+```
+
+# 2. Load datasets 
+```{r}
+# load our original pers dataset and our dataset with all of our sexual selection info
+  pers <- read.csv("./data/pers_data.csv", stringsAsFactors = FALSE)
+  bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
+
+  # Merge the two by spp_names columns
+  pers <- merge(x = pers,
+              y = bodysize[,c("species_name", "SSD_index", "mating_system")],
+              by="species_name", all.x=TRUE,  no.dups = TRUE)
+
+  # Select only the relevant columns to make life easier
+  pers_new <- pers %>% 
+         select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean_conv, 
+         male_sd_conv, female_n, female_mean_conv, female_sd_conv, depend, directionality, spp_name_phylo, mating_system, 
+         age, population, study_environment, study_type, measurement_type)
+
+# Add in observation level random effect (metafor doesn't do this, need to do it manually)
+  pers_new <- pers_new %>% 
+  group_by(taxo_group) %>% 
+  mutate(obs = 1:length(study_ID))  
+  
+```
+
+# 3. Calculating effect sizes (SMD with Hedges' g and lnCVR)
+```{r}
+  # SMD (Hedges' g)
+  pers_new <- escalc(measure = "SMD", 
+                     n1i = male_n, n2i = female_n,
+                     m1i = male_mean_conv, m2i = female_mean_conv,
+                     sd1i = male_sd_conv, sd2i = female_sd_conv, data = pers_new, var.names=c("SMD_yi","SMD_vi"), append = TRUE)
+  
+  # lnCVR
+  pers_new <- escalc(measure = "CVR",
+                     n2i = female_n, n1i = male_n,
+                     m2i = female_mean_conv, m1i = male_mean_conv,
+                     sd2i = female_sd_conv, sd1i = male_sd_conv, data = pers_new, var.names=c("CVR_yi","CVR_vi"))
+
+  # we have some NAs where one or both sexes have a value of 0 for either mean or SD. Will be easiest to just remove these.
+    # Exclude NAs
+    pers_new <- pers_new %>%
+    filter(!is.na(CVR_yi), !is.na(SMD_yi))
+    
+    dim(pers_new)    # check they've been removed with no issues
+```
+
+# 4. Looking at the mean-variance relationship in our data
+```{r}
+# This is to make sure that using lnCVR as a measure of variability is valid 
+    
+  # females and males seperately because they are in different columns
+    # use ggplot to make a scatterplot of females
+    fem <- ggplot(pers_new, aes(x = female_mean_conv, y = female_sd_conv)) + geom_point()
+    
+    # on log scale
+    fem + scale_x_continuous(trans = 'log10')
+      + scale_y_continuous(trans = 'log10')
+    
+    # mean and SD on log scale to calculate correlation
+    logfemale_mean <- log(pers_new$female_mean_conv)
+    logfemale_SD <- log(pers_new$female_sd_conv)
+    
+    # correlation between mean and SD
+    cor(logfemale_mean, logfemale_SD) #0.91
+  
+  # Males
+    # use ggplot to make a scatterplot of females
+    male <- ggplot(pers_new, aes(x = male_mean_conv, y = male_sd_conv)) + geom_point()
+    
+    # on log scale
+    male + scale_x_continuous(trans = 'log10')
+    + scale_y_continuous(trans = 'log10')
+    
+    # mean and SD on log scale to calculate correlation
+    logmale_mean <- log(pers_new$male_mean_conv)
+    logmale_SD <- log(pers_new$male_sd_conv)
+    
+    # correlation between mean and SD
+    cor(logmale_mean, logmale_SD) #0.90
+```
+
+# 5. Checkling for outliers and removing weird effect sizes
+```{r}
+# make some funnel plots to look at the data
+
+    # lnCVR
+    hist(pers_new$CVR_yi)
+    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+  
+    # SMD
+    hist(pers_new$SMD_yi)
+    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+    text(as.character(pers_new$study_ID), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi))
+    
+    pers_new %>% 
+    filter(study_ID == "P231" & SMD_yi < -20) # P231 has 2 datapoints (proportions) with huge differences: -68 and -38 remove?
+    
+      # filter out those two large effect sizes
+      pers_new <- pers_new %>%
+      filter(!SMD_yi < -20)
+      
+      dim(pers_new) 
+      
+    # checking SMD outliers - inverse SE > 14
+    funnel(x = pers_new$SMD_yi, vi = pers_new$SMD_vi, yaxis="seinv")
+    text(as.character(pers_new$obs), x = pers_new$SMD_yi, y = 1/sqrt(pers_new$SMD_vi), offset = 0.8)
+    
+    # checking lnCVR outliers
+    funnel(x = pers_new$CVR_yi, vi = pers_new$CVR_vi, yaxis="seinv", xlim = c(-10, 10))
+    text(as.character(pers_new$obs), x = pers_new$CVR_yi, y = 1/sqrt(pers_new$CVR_vi), offset = 0.8) 
+    
+# Some measures are more physiological/not personality than personality, so probably wise to remove these before we run the models:
+    # P029 - obs 22, 23, 32 
+    # P084 - obs 59, 62, 63, 65, 68, 70, 71, 72, 74
+    # P060 - obs 216, 217
+    # P211 - obs 230, 245
+    # P117 - obs 397, 393, 402, 414
+    # P197 - obs 541, 544, 546, 547
+    # P069 - obs 669, 672, 673, 682, 683, 684, 686, 694 
+    
+    # remove these by study 
+    pers_new <- pers_new %>% filter(!study_ID == "P029" | !obs %in% c("22", "23", "32"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P084" | !obs %in% c("59", "62", "63", "65", "68", "70", "71", "72", "74"))
+    
+    pers_new <-  pers_new %>% filter(!study_ID == "P060" | !obs %in% c("216", "217"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P211" | !obs %in% c("230", "245"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P117" | !obs %in% c("397", "393", "402", "414"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P197" | !obs %in% c("541", "544", "546", "547"))
+    
+    pers_new <- pers_new %>% filter(!study_ID == "P197" | !obs %in% c("669", "672", "673", "682", "683", "684", "686", "694")) 
+    
+    dim(pers_new) # check they've been removed without issue
+```
+
+## Flip signs of effects for SMD
+
+The directional meaning of effect sizes vary depending on the specific units and trait being measured. The data has a directionality column that tells one if the meaning should be reversed (1) or left the same. 
+```{r}
+   pers_new$directionality <- ifelse(is.na(pers_new$directionality), 0, 1)
+
+      pers_new$SMD_yi_flip <- ifelse(pers_new$directionality == 1, pers_new$SMD_yi*(-1), pers_new$SMD_yi)
+```
+
+# 6. Prepare the phylogenetic trees
+We constructed seperate phylogenetic trees for each taxonomic group. The tree for birds was constructed using BirdTree.org, the rest were constructed using TimeTree.org. We'll use these trees for multi-level meta-analytic models throughout the analysis.
+```{r}
+# Find all tree file names
+  tree_files <- paste0("./trees/", list.files("./trees"))[-1]
+
+    # Bird tree has been constructed already, just need to get trees for the rest of the taxo groups   
+      trees <- lapply(tree_files, function(x) read.tree(x))
+      names <- gsub("./trees/", "", tree_files)
+      names(trees) <- names
+
+    # Plot the trees and see how they look
+      par(mfrow = c(1,5), mar = c(1,1,1,1))
+      lapply(trees, function(x) plot(x, cex = 1))
+
+    # Check that they are ultrametric
+      lapply(trees, function(x) is.ultrametric(x))
+
+    # Check that all names in the phylogeny are also in the data
+      taxa_data_list <- split(pers_new, pers_new$taxo_group)
+      
+      other_groups <- mapply(x = taxa_data_list, 
+                             y = trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks")) 
+
+          #Print out each taxon group
+      for(i in colnames(other_groups)){
+            print(i)
+            print(other_groups[,i] )
+      }
+      
+
+      # Now to prune trees so that we get tree names that match with species in data
+      pruned_trees <- mapply(x = taxa_data_list, 
+                             y = trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "prune"))
+
+      # Check that this has been done correctly
+        re_checks <- mapply(x = taxa_data_list, 
+                             y = pruned_trees, 
+                             function(x,y) tree_checks(x,y, "spp_name_phylo", type = "checks"))
+        
+      for(i in colnames(re_checks)){
+            print(i)
+            print(re_checks[,i] )
+      }
+
+    # Extract the phylogenetic correlation matrices
+            phylo_vcv <- lapply(pruned_trees, function(x) vcv(x, corr = TRUE)) #these matrices are used in the models
+```
+
+## Before we begin, we need to run a sensitivity analysis to see if score data is ok to use
+
+With these models, we are just including score as a moderator term to compare with the rest of the dataset (some of which has already been transformed, we just can't do that with scores).
+```{r}
+# make a new column where data type is binary (score or other)
+
+    pers_new$score <- ifelse(pers_new$measurement_type == "score", "score", "other")
+
+# how many effect sizes are scores?
+    data.frame(pers_new %>%
+    group_by(taxo_group, score) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))) 
+  
+    # run our model:
+    sensitivity_mod1_score <- meta_model_fits(pers_new, phylo_vcv, type = "score")
+
+# Extract the SMD and lnCVR results
+    smd_mods_score <- sensitivity_mod1_score["SMD",] #inverts significant 
+    lnCVR_mods_score <- sensitivity_mod1_score["lnCVR",] 
+    
+# Because invert score data is significantly different, we need to remove these effect sizes before running our models
+    # filter out invert scores from pers dataset  
+    pers_new <- pers_new %>%
+    filter(score != "score" | taxo_group != "invertebrate") 
+    
+    dim(pers_new) #looks good, just lost those 61 score effect sizes for inverts
+```
+
+# 7. Models
+Let's run the first bunch of models on the whole dataset. We'll start off with intercept-only multi-level meta-analytic models, then move to multi-level meta-regression models (personality traits, and SSD). The functions in `func.R` should be consulted to see precisely what models are being fit across the taxonomic groups.
+
+## 7a. Intercept-only MLMA models
+Complete model summaries are presented in Supplementary Table S1 
+```{r}
+# First we will fit our MLMA intercept only models, across each taxo group. 
+
+  # we can use this function to just read the saved model output instead of re-running the model, which takes a while
+  if(rerun_models == TRUE){
+    MLMA_models <- meta_model_fits(pers_new, phylo_vcv, type = "int")
+    saveRDS(MLMA_models, "./output/MLMA_models_int")
+  }else{
+    MLMA_models <- readRDS("./output/MLMA_models_int")
+  }
+
+  # View model results
+  split_taxa <- split(pers_new, pers_new$taxo_group)
+  smd_mods <- MLMA_models["SMD",]
+  lnCVR_mods <- MLMA_models["lnCVR",]
+
+# From these models we can get I2 estimates. Study_ID is the between study heterogeneity, Phylo tells us if there is a phylogenetic signal and the strength of that signal. Total I2 is testing how much heterogeneity we have beyond sampling variance:
+  birds_smd = I2(smd_mods[[1]], v = split_taxa[[1]]$SMD_vi, phylo = "spp_name_phylo")
+  birds_CVR = I2(lnCVR_mods[[1]], v = split_taxa[[1]]$CVR_vi, phylo = "spp_name_phylo")
+  fish_smd = I2(smd_mods[[2]], v = split_taxa[[2]]$SMD_vi, phylo = "spp_name_phylo")
+  fish_CVR = I2(lnCVR_mods[[2]], v = split_taxa[[2]]$CVR_vi, phylo = "spp_name_phylo")
+  invert_smd = I2(smd_mods[[3]], v = split_taxa[[3]]$SMD_vi, phylo = "spp_name_phylo")
+  invert_CVR = I2(lnCVR_mods[[3]], v = split_taxa[[3]]$CVR_vi, phylo = "spp_name_phylo")
+  mammal_smd = I2(smd_mods[[4]], v = split_taxa[[4]]$SMD_vi, phylo = "spp_name_phylo")
+  mammal_CVR = I2(lnCVR_mods[[4]], v = split_taxa[[4]]$CVR_vi, phylo = "spp_name_phylo")
+  reptile_smd = I2(smd_mods[[5]], v = split_taxa[[5]]$SMD_vi, phylo = "spp_name_phylo")
+  reptile_CVR = I2(lnCVR_mods[[5]], v = split_taxa[[5]]$CVR_vi, phylo = "spp_name_phylo")
+  
+# Now that we have our list of models, we can extract the estimates, CIs and prediction intervals using the orchaRd package:
+  MLMA_estimates_SMD <- plyr::ldply(lapply(smd_mods, function(x) print(mod_results(x, mod = "Int"))))
+  MLMA_estimates_lnCVR <- plyr::ldply(lapply(lnCVR_mods, function(x) print(mod_results(x, mod = "Int"))))
+```
+
+## 7b. Personality trait MLMR models
+These models include personality trait type as a moderator. Please note that we estimate the mean for each of the categorical levels because we are not really interested in whether the means differ, but whether or not males and females differ in any of these traits.
+
+Complete model summaries are presented in Supplementary Table S2
+```{r}
+# we can just reload saved model outputs here to save time
+
+    if(rerun_models == TRUE){
+      MLMR_models_pers_trait <- meta_model_fits(pers_new, phylo_vcv, type = "pers")
+      saveRDS(MLMR_models_pers_trait, "./output/MLMR_models_pers_trait")
+    } else{
+      MLMR_models_pers_trait <- readRDS("./output/MLMR_models_pers_trait")
+    }
+
+  # Extract the SMD and lnCVR results
+  smd_mods_pers <- MLMR_models_pers_trait["SMD",]
+  lnCVR_mods_pers <- MLMR_models_pers_trait["lnCVR",] # these model objects are used to make the orchard plots shown in Figures 1 & 2
+
+  # Get the combined estimates from them all
+  MLMA_estimates_SMD_pers <- plyr::ldply(lapply(smd_mods_pers, function(x) print(mod_results(x, mod = "personality_trait"))))
+  MLMA_estimates_lnCVR_pers <- plyr::ldply(lapply(lnCVR_mods_pers, function(x) print(mod_results(x, mod = "personality_trait"))))
+
+  # Add in n and k to these dataframes
+  n_k<- pers_new %>%
+      group_by(taxo_group, personality_trait) %>%
+      summarise(n = n(), spp = length(unique(spp_name_phylo)), k = length(unique(study_ID)))
+  
+  # Summary of model estimates with number of studies, species and effect sizes included
+  MLMA_estimates_SMD_pers <- data.frame(MLMA_estimates_SMD_pers, n_k[,c("n", "spp", "k")])
+  MLMA_estimates_lnCVR_pers <- data.frame(MLMA_estimates_lnCVR_pers, n_k[,c("n", "spp", "k")])
+```
+
+## 7c. Personality trait x SSD MLMR models
+
+Now let's look at how SSD interacts with personality trait type. Here we are not estimating an intercept either, so each intercept varies by trait category and each slope as well. Note that there are lots of warnings, but these are the result of many levels not being present in taxa groups. We chose not to scale SSD_index because it is easier (and biologically relevant) to interpret SSD when it is 0 (when males and females are the same size), and when SSD is positive (when males are larger than females). 
+
+Model summaries are presented in Supplementary Tables S3-S4
+```{r}
+# again, we can just reload our saved model output here  
+  
+      if(rerun_models == TRUE){
+      MLMR_models_pers_SSD <- meta_model_fits(pers_new, phylo_vcv, type = "pers_SSD")
+      saveRDS(MLMR_models_pers_SSD, "./output/MLMR_models_pers_SSD")
+    } else{
+      MLMR_models_pers_SSD <- readRDS("./output/MLMR_models_pers_SSD")
+    }  
+
+  # Extract the SMD and lnCVR results
+  smd_mods_pers_SSD <- MLMR_models_pers_SSD["SMD",]
+  lnCVR_mods_pers_SSD <- MLMR_models_pers_SSD["lnCVR",]
+
+# Get the combined estimates from them all
+# need to run revised orchard functions:
+  # orchard function to extract estimates and prediction intervals from models with continuous moderators
+     # Get prediction intervals for a single categorical variable when controlling for continuous variables in a model.
+      get_pred_est_cont <- function (model, mod_cat, mod_cont, type = c("mean", "zero")) {
+	    type = match.arg(type)
+	    # Categorical moderator
+		     pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+	    name_cat <- row.names(model$beta)[pos]
+	    name_cat <- as.character(stringr::str_replace(name_cat, {{mod_cat}}, ""))
+	    name_clean <- firstup(name_cat)
+	         len <- length(name_clean)
+
+    	# Continuous moderators
+		  len_cont <- length(mod_cont)
+
+		  if(type == "mean"){
+			  if(len_cont == 1){  	
+			  	means_cont <- mean(model$X[,mod_cont])
+			  	names(means_cont) <- mod_cont
+			  }
+			  if(len_cont > 1){
+				means_cont <- colMeans(model$X[,mod_cont])
+			  }
+		  }
+
+		  if(type == "zero"){
+			  if(len_cont == 1){  	
+			  	means_cont <- 0
+			  	names(means_cont) <- mod_cont
+			  }
+			  if(len_cont > 1){
+				means_cont <- rep(0, len_cont)
+				names(means_cont) <- mod_cont
+			  }
+	  	}
+
+	    # Get prediction intervals
+		    newdata <- matrix(0, ncol = len+len_cont, nrow = len)
+		    diag(newdata[c(1:len),c(1:len)]) <- 1
+		    newdata[,c((len+1):(len+len_cont))] <- means_cont
+		
+	    	for(i in 1:len){
+		  	newdata[i,c((len+1):(len+len_cont))] <-  means_cont
+	    	}
+
+	    	colnames(newdata) <- c(name_cat, names(means_cont))
+
+	      pred <- metafor::predict.rma(model, newmods = newdata)
+
+      	 estimate <- pred$pred
+      	 lowerCL <- pred$ci.lb 
+      	 upperCL <- pred$ci.ub
+      	 lowerPR <- pred$cr.lb
+      	 upperPR <- pred$cr.ub 
+	  
+	        table <- tibble::tibble(name = name_clean, estimate = estimate, lowerCL = lowerCL, upperCL = upperCL, lowerPR = lowerPR, upperPR = upperPR)
+	        return(table)
+        }
+
+        #get_pred_est_cont(model, mod_cat, mod_cont)
+
+        get_data_cont <- function(model, mod_cat){
+       
+         pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+    	    names <- row.names(model$beta)[pos]
+    	    name_cat <- as.character(stringr::str_replace(names, {{mod_cat}}, ""))
+    
+    	    X <- as.data.frame(model$X)[,names]
+    
+    	  moderator <- matrix(ncol = 1, nrow = dim(X)[1])
+    
+    	  for(i in 1:ncol(X)){
+    	      moderator <- ifelse(X[,i] == 1, name_cat[i], moderator)
+    	  }
+    	    moderator <- firstup(moderator)
+    	    yi <- model$yi
+    	    vi <- model$vi
+    	  type <- attr(model$yi, "measure")
+    
+    		data <- data.frame(yi, vi, moderator, type)
+    		return(data)
+    
+    }
+
+    mod_results_new <- function(model, mod_cat, mod_cont, type = c("mean", "zero")) { 
+
+  	type = match.arg(type)
+  
+  	if(all(class(model) %in% c("rma.mv", "rma")) == FALSE) {stop("Sorry, you need to fit a metafor model of class rma.mv or rma")}
+  
+    data <- get_data_cont(model, mod_cat)
+  
+    if(length(mod_cont) == 0){
+  	# Get confidence intervals
+  	CI <- get_est(model, mod_cat)
+  
+  	# Get prediction intervals
+  	PI <- get_pred(model, mod_cat)
+  
+  	model_results <- list(mod_table = cbind(CI, PI[,-1]), data = data)
+  	}
+
+	  if(length(mod_cont) >= 1){
+		ests <- get_pred_est_cont(model, mod_cat, mod_cont, type)
+		model_results <- list(mod_table = ests, data = data)	
+	  }
+
+	  class(model_results) <- "orchard"
+
+	  return(model_results)
+
+    }
+  
+  # extract estimates using modified function:
+   MLMA_estimates_SMD_SSD <- plyr::ldply(lapply(smd_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
+ MLMA_estimates_lnCVR_SSD <- plyr::ldply(lapply(lnCVR_mods_pers_SSD, function(x) print(mod_results_new(x, mod_cat = "personality_trait", mod_cont = "SSD_index", type = "zero"))))
+
+  # Table to get species numbers, no. studies and no. effect sizes:
+ 
+  data.frame(pers_new %>%
+  group_by(taxo_group, personality_trait) %>%
+  filter(!is.na(SSD_index))%>%
+  summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+```
+
+## 7d. SSD subset models
+
+Because we aren't really interested in how each trait type differs from each other, we need to run our SSD models on subsets of the data where we can get the mean estimates for individual trait types and for SSD. Model summaries are presented in Supplementary Tables S5-S8. 
+
+NOTE: Since we are conducting our meta-regression at the species level (the level at which we can assume effect sizes are independent), any personality trait with fewer than 10 species needs to be dropped to look at interactions between SSD and personality. Having a minimum of 10 studies etc. is the rule of thumb for meta-regressions (e.g. see Borenstein et al Intro to Meta-A)
+
+### Mammals
+```{r}
+# NEED TO DROP: 
+#   ALL REPTILES - GONE, NOT ENOUGH SPECIES
+#   BIRDS - EVERYTHING BUT BOLDNESS
+#   FISH - ACTIVITY, EXPLORATION & SOCIALITY
+#   INVERTS - SOCIALITY, EXPLORATION & AGGRESSION
+#   MAMMALS - SOCIALITY
+
+# 1. MAMMALS
+
+# First, we need to subset our pers dataset by taxo group to drop the unwanted levels.
+  # a. activity
+    pers_new_mammal_activity <- as.data.frame(pers_new %>%
+    filter(personality_trait == "activity") %>%
+    filter(taxo_group == "mammal")) 
+  # b. boldness
+    pers_new_mammal_boldness <- as.data.frame(pers_new %>%
+    filter(personality_trait == "boldness") %>%
+    filter(taxo_group == "mammal")) 
+  # c. aggression
+    pers_new_mammal_aggression <- as.data.frame(pers_new %>%
+    filter(personality_trait == "aggression") %>%
+    filter(taxo_group == "mammal")) 
+  # d. exploration
+    pers_new_mammal_exploration <- as.data.frame(pers_new %>%
+    filter(personality_trait == "exploration") %>%
+    filter(taxo_group == "mammal")) 
+
+  # Check that this has been done correctly
+      pers_new_mammal %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+
+  # Extract the phylogenetic correlation matrices
+     phylo_vcv_mammal <- phylo_vcv[[4]] 
+
+  # Rerun SSD models:
+   # a. activity
+    #SMD
+    MLMR_mods_pers_SSD_mammal_activity_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_mammal_activity)
+
+    #lnCVR
+    MLMR_mods_pers_SSD_mammal_activity_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_mammal_activity)
+  
+  # b. boldness
+    #SMD
+    MLMR_mods_pers_SSD_mammal_bold_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                              random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                              R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                              test = "t", data = pers_new_mammal_boldness)
+    
+    #lnCVR
+    MLMR_mods_pers_SSD_mammal_bold_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_mammal_boldness)
+  
+  # c. aggression
+    #SMD
+    MLMR_mods_pers_SSD_mammal_aggression_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_mammal_aggression)
+
+    #lnCVR
+    MLMR_mods_pers_SSD_mammal_aggression_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_mammal_aggression)
+  
+  # d. exploration
+     #SMD
+    MLMR_mods_pers_SSD_mammal_explore_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_mammal_exploration)
+
+    #lnCVR
+    MLMR_mods_pers_SSD_mammal_explore_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_mammal_exploration)
+
+  
+```
+
+### Birds
+```{r}
+# 2. BIRDS
+
+  # subset dataset
+  pers_new_bird <- as.data.frame(pers_new %>%
+    filter(personality_trait == "boldness" & taxo_group == "bird"))
+
+  # Check that this has been done correctly
+      pers_new_bird %>%
+      group_by(personality_trait) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
+
+  # phylo_vcv birds only
+  phylo_vcv_bird <- phylo_vcv[[1]]
+  
+  # rerun models
+    # SMD
+    MLMR_mods_pers_SSD_bird_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_bird)
+
+    # lnCVR
+    MLMR_mods_pers_SSD_bird_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_bird)
+```
+
+### Fish
+```{r}
+# 3. FISH
+  
+  # subset by trait type
+  # a. aggression
+    pers_new_fish_aggression <- as.data.frame(pers_new %>%
+    filter(personality_trait == "aggression") %>%
+    filter(taxo_group == "fish")) 
+  # b. boldness
+    pers_new_fish_bold <- as.data.frame(pers_new %>%
+    filter(personality_trait == "boldness") %>%
+    filter(taxo_group == "fish")) 
+    
+  # Check that this has been done correctly
+    pers_new_fish %>%
+    group_by(personality_trait) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+    phylo_vcv_fish <- phylo_vcv[[2]]
+  
+  # rerun models
+  # a. aggression
+    # SMD
+      MLMR_mods_pers_SSD_fish_aggression_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_fish_aggression)
+
+    # lnCVR
+      MLMR_mods_pers_SSD_fish_aggression_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_fish_aggression)
+
+  # b. boldness
+    # SMD
+      MLMR_mods_pers_SSD_fish_bold_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_fish_bold)
+
+    # lnCVR
+      MLMR_mods_pers_SSD_fish_bold_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_fish_bold)  
+```
+
+### Inverts
+```{r}
+# 4. INVERTS
+  # subset dataset
+  # a. activity
+    invert_activity <- as.data.frame(pers_new %>%
+    filter(personality_trait == "activity") %>%
+    filter(taxo_group == "invertebrate")) 
+  # b. boldness
+    invert_bold <- as.data.frame(pers_new %>%
+    filter(personality_trait == "boldness") %>%
+    filter(taxo_group == "invertebrate"))
+  
+  # Check that this has been done correctly
+    pers_new_invert %>%
+    group_by(personality_trait) %>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+    phylo_vcv_invert <- phylo_vcv[[3]]
+  
+  # rerun models
+    # a. activity
+    # SMD
+      MLMR_mods_pers_SSD_invert_activity_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_activity)
+
+    # lnCVR
+      MLMR_mods_pers_SSD_invert_activity_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                            test = "t", data = invert_activity)  
+  
+   # b. boldness
+   # SMD
+      MLMR_mods_pers_SSD_invert_bold_SMD <- rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                          test = "t", data = invert_bold)
+
+    # lnCVR
+      MLMR_mods_pers_SSD_invert_bold_lncvr <- rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_invert), control=list(optimizer="optim"), 
+                                            test = "t", data = invert_bold)  
+```
+
+# 8. Exploratory analyses
+
+We collected some additional information from the literature (mating system) and from studies that we expected would influence sex differences. These analyses are strictly exploratory and just compare categorical moderator terms.
+
+## 8a. mating system
+
+Do effect sizes from monogamous or multiply-mating species differ? Model summaries presented in Supplementary Table S?
+```{r}
+# what have we got to work with?
+    pers_new %>%
+    group_by(taxo_group, mating_system) %>%
+    filter(!is.na(mating_system))%>%
+    summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) # make a table of numbers
+
+# reload model output
+  
+    if(rerun_models == TRUE){
+      MLMR_models_pers_mating_system <- meta_model_fits(pers_new, phylo_vcv, type = "pers_mate")
+      saveRDS(MLMR_models_pers_mating_system, "./output/MLMR_models_pers_mating_system")
+    } else{
+     MLMR_models_pers_mating_system <- readRDS("./output/MLMR_models_pers_mating_system")
+    }
+
+# Extract the SMD and lnCVR results
+    smd_mods_mating_system <- MLMR_models_pers_mating_system["SMD",]
+    lnCVR_mods_mating_system <- MLMR_models_pers_mating_system["lnCVR",]
+```
+
+## 8b. age
+
+Do effect sizes from adults (sexually mature) or juveniles differ? Model summaries presented in Supplementary Table S?
+```{r}
+# make a table
+  data.frame(pers_new %>%
+  group_by(taxo_group, age) %>%
+  summarise(n= n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# run simple model:
+  MLMR_models_pers_age <- meta_model_fits(pers_new, phylo_vcv, type = "age")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_age <- MLMR_models_pers_age["SMD",]
+  lnCVR_mods_pers_age <- MLMR_models_pers_age["lnCVR",]
+```
+
+## 8c. population
+
+Do effect sizes from wild animals or lab animals differ? Model summaries presented in Supplementary Table S?
+```{r}
+# table
+  data.frame(pers_new %>%
+  group_by(taxo_group, population) %>%
+  summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# run model:
+  MLMR_models_pers_pop <- meta_model_fits(pers_new, phylo_vcv, type = "pop")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_pop <- MLMR_models_pers_pop["SMD",]
+  lnCVR_mods_pers_pop <- MLMR_models_pers_pop["lnCVR",]
+```
+
+## 8d. study environment
+
+Do effect sizes collected in the wild or the lab differ? Model summaries presented in Supplementary Table S?
+```{r}
+# table
+  data.frame(pers_new %>%
+  group_by(taxo_group, study_environment) %>%
+  summarise(n = n(), N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+
+# run model:
+  MLMR_models_pers_environ <- meta_model_fits(pers_new, phylo_vcv, type = "environ")
+
+# Extract the SMD and lnCVR results
+  smd_mods_pers_enviro <- MLMR_models_pers_environ["SMD",]
+  lnCVR_mods_pers_enviro <- MLMR_models_pers_environ["lnCVR",]
+```
+
+## 8e. study type 
+
+Do effect sizes from observational or experimental study design differ? Model summaries presented in Supplementary Table S?
+```{r}
+# Let's see what we have to work with
+  data.frame(pers_new %>%
+  group_by(taxo_group, study_type) %>%
+  summarise(N_spp = length(unique(spp_name_phylo)), N_studies = length(unique(study_ID))))
+    # inverts only have experimental observations, so need to exclude inverts from this analysis
+    # because our phylo_vcv matrix is in a list that is hard to drop elements from, let's just run each model individually 
+
+# 1. Mammals
+  # Subset data
+    pers_new_mammal <- as.data.frame(pers_new %>%
+    filter(taxo_group == "mammal"))
+
+  # Check that this has been done correctly
+      pers_new_mammal %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+
+  # Run models with just study type as moderator:
+    #SMD
+    MLMR_mods_pers_studytype_mammal_SMD <- rma.mv(SMD_yi_flip ~ study_type, V = SMD_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_mammal)
+
+    #lnCVR
+    MLMR_mods_pers_studytype_mammal_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_mammal), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_mammal)
+
+# 2. BIRDS
+  # subset dataset
+      pers_new_bird <- as.data.frame(pers_new %>%
+      filter(taxo_group == "bird"))
+
+  # Check that this has been done correctly
+      pers_new_bird %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo))) 
+
+  # rerun models
+      #SMD
+       MLMR_mods_pers_studytype_bird_SMD <- rma.mv(SMD_yi_flip ~ study_type, V = SMD_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_bird)
+
+      #lnCVR
+      MLMR_mods_pers_studytype_bird_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi, 
+                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                                   R = list(spp_name_phylo=phylo_vcv_bird), control=list(optimizer="optim"), 
+                                                   test = "t", data = pers_new_bird)
+  
+# 3. FISH
+  # subset dataset
+      pers_new_fish <- as.data.frame(pers_new %>%
+      filter(taxo_group == "fish")) 
+    
+  # Check that this has been done correctly
+      pers_new_fish %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+
+  # rerun models
+      #SMD
+      MLMR_mods_pers_studytype_fish_SMD <- rma.mv(SMD_yi_flip ~ study_type, V = SMD_vi, 
+                                          random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_fish)
+
+      #lnCVR
+      MLMR_mods_pers_studytype_fish_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_fish), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_fish)
+
+# 4. Reptiles
+  # subset dataset
+      pers_new_reptile <- as.data.frame(pers_new %>%
+      filter(taxo_group == "reptilia")) 
+    
+  # Check that this has been done correctly
+      pers_new_reptile %>%
+      group_by(study_type) %>%
+      summarise(n = n(), studies = length(unique(study_ID)), species = length(unique(spp_name_phylo)))  
+  
+  # phylo
+      phylo_vcv_reptile <- phylo_vcv[[5]]
+  
+  # rerun models
+      #SMD
+      MLMR_mods_pers_studytype_rep_SMD <- rma.mv(SMD_yi_flip ~ study_type, V = SMD_vi, 
+                                                random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                          R = list(spp_name_phylo=phylo_vcv_reptile), control=list(optimizer="optim"), 
+                                          test = "t", data = pers_new_reptile)
+
+      #lnCVR
+      MLMR_mods_pers_SSD_rep_lncvr <- rma.mv(CVR_yi ~ study_type, V = CVR_vi, 
+                                            random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
+                                            R = list(spp_name_phylo=phylo_vcv_reptile), control=list(optimizer="optim"), 
+                                            test = "t", data = pers_new_reptile)
+```
+
+# 9. Dependency matrix models - sensitivity analysis
+
+We need to refit our 3 main models accounting for any dependency resulting from the same traits measured on the same animals (likely a big source of non-independence) and any other shared covariance. We added the D matrices to the residual variance matrix as opposed to the sampling covariance. We chose to set 3 different levels of dependency (rho): 0.3, 0.5 an 0.8. 
+
+Model summaries are also presented in Supplementary Tables S?-S?
+```{r}
+ # Create the dependency matrices; try 3 levels of rho = 0.3, 0.5, 0.8
+      
+      pers_new <- data.frame(pers_new %>%
+      group_by(taxo_group) %>%
+      mutate(depend_n = paste0(study_ID, "_", depend)))
+    
+      split_taxa <- split(pers_new, pers_new$taxo_group)
+    
+  # 0.3 rho:
+    D_matrices_0.3 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.3))
+  # 0.5 rho:
+    D_matrices_0.5 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.5))
+  # 0.8 rho:   
+    D_matrices_0.8 <- lapply(split_taxa, function(x) make_VCV_matrix(x, V = x$SMD_vi, cluster = "depend_n", obs = "obs", type = "cor", rho = 0.8))
+    
+# 1. Intercept only models
+    # rho = 0.8
+     int_0.8 <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.8) # gives an ugly but otherwise useful model summary
+
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_0.8 <- int_0.8[["SMD"]] 
+    lnCVR_mods_D_0.8 <- int_0.8[["lnCVR"]] 
+    
+    # prediction intervals
+    MLMA_estimates_SMD_D_0.8 <- plyr::ldply(lapply(smd_mods_D_0.8, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_D_0.8 <- plyr::ldply(lapply(lnCVR_mods_D_0.8, 
+                              function(x) print(mod_results(x, mod = "Int"))))
+    
+    # rho = 0.5
+    int_0.5 <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.5)
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_0.5 <- int_0.5[["SMD"]] 
+    lnCVR_mods_D_0.5 <- int_0.5[["lnCVR"]] 
+  
+    # prediction intervals
+    MLMA_estimates_SMD_D_0.5 <- plyr::ldply(lapply(smd_mods_D_0.5, 
+                             function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_D_0.5 <- plyr::ldply(lapply(lnCVR_mods_D_0.5, 
+                              function(x) print(mod_results(x, mod = "Int"))))
+  
+    # rho = 0.3
+    int_0.3 <- fit_int_MLMAmodel_D(pers_new, phylo_vcv, D_matrices_0.3)
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_0.3 <- int_0.3[["SMD"]] 
+    lnCVR_mods_D_0.3 <- int_0.3[["lnCVR"]] 
+  
+   # prediction intervals
+    MLMA_estimates_SMD_D_0.3 <- plyr::ldply(lapply(smd_mods_D_0.3, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_D_0.3 <- plyr::ldply(lapply(lnCVR_mods_D_0.3, 
+                              function(x) print(mod_results(x, mod = "Int"))))
+   
+# 2. Personality Trait models
+   # rho = 0.8
+    pers_0.8 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.8)
+    
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.8 <- pers_0.8[["SMD"]] 
+    lnCVR_mods_D_pers_0.8 <- pers_0.8[["lnCVR"]] 
+  
+    # prediction intervals
+    MLMA_estimates_SMD_pers_D_0.8 <- plyr::ldply(lapply(smd_mods_D_pers_0.8, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_pers_D_0.8 <- plyr::ldply(lapply(lnCVR_mods_D_pers_0.8, 
+                              function(x) print(mod_results(x, mod = "Int")))) # is int the right model type to use here?
+    
+  # rho = 0.5
+    pers_0.5 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.5)
+    
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.5 <- pers_0.5[["SMD"]] 
+    lnCVR_mods_D_pers_0.5 <- pers_0.5[["lnCVR"]] 
+  
+    # prediction intervals
+    MLMA_estimates_SMD_pers_D_0.5 <- plyr::ldply(lapply(smd_mods_D_pers_0.5, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_pers_D_0.5 <- plyr::ldply(lapply(lnCVR_mods_D_pers_0.5, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+    
+  # rho = 0.3
+    pers_0.3 <- fit_int_MLMAmodel_D_pers(pers_new, phylo_vcv, D_matrices_0.3)
+    
+    split_taxa <- split(pers_new, pers_new$taxo_group)
+    smd_mods_D_pers_0.3 <- pers_0.3[["SMD"]] 
+    lnCVR_mods_D_pers_0.3 <- pers_0.3[["lnCVR"]] 
+  
+    # prediction intervals
+    MLMA_estimates_SMD_pers_D_0.3 <- plyr::ldply(lapply(smd_mods_D_pers_0.3, 
+                           function(x) print(mod_results(x, mod = "Int")))) 
+    MLMA_estimates_lnCVR_pers_D_0.3 <- plyr::ldply(lapply(lnCVR_mods_D_pers_0.3, 
+                              function(x) print(mod_results(x, mod = "Int")))) 
+    
+# 3. Pers Trait * SSD models (just use the full interaction models here since this is just a check)
+    # won't bother with prediction intervals here since these models aren't really for interpretation
+  # rho = 0.8
+      ssd_0.8 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.8)
+    
+      split_taxa <- split(pers_new, pers_new$taxo_group)
+      smd_mods_D_pers_ssd_0.8 <- ssd_0.8[["SMD"]] 
+      lnCVR_mods_D_pers_ssd_0.8 <- ssd_0.8[["lnCVR"]] 
+
+  # rho = 0.5
+      ssd_0.5 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.5)
+    
+      split_taxa <- split(pers_new, pers_new$taxo_group)
+      smd_mods_D_pers_ssd_0.5 <- ssd_0.5[["SMD"]] 
+      lnCVR_mods_D_pers_ssd_0.5 <- ssd_0.5[["lnCVR"]] 
+  
+  # rho = 0.3
+      ssd_0.3 <- fit_int_MLMAmodel_D_pers_ssd(pers_new, phylo_vcv, D_matrices_0.3)
+      
+      split_taxa <- split(pers_new, pers_new$taxo_group)
+      smd_mods_D_pers_ssd_0.3 <- ssd_0.3[["SMD"]] 
+      lnCVR_mods_D_pers_ssd_0.3 <- ssd_0.3[["lnCVR"]] 
+      
+```
+
+# 10. Publication Bias - sensitivity analysis
+
+We can use: 1) funnel plots to look for asymmetry across all effect sizes for both SMD and lnCVR, and 2) Egger's test which performs a regression test on our funnel plots ... but is not useful when there is high heterogeneity NOT caused by publication bias (which I think is the case for our data).
+
+Since our data has very high heterogeneity, we instead included precision as a moderator term in our full model (personality trait model) to see if study precision is driving effect size patterns. The logic here is that studies with low or high precision can have a significant influence and so including precision as a moderator will allow us to see if precision is significant (and which direction).
+
+Model summaries are presented in Supplementary Table S?
+```{r}
+ # adding precision to dataset as a moderator term
+    #SMD
+       pers_new$precisionSMD <- 1/sqrt(pers_new$SMD_vi) # use this as a moderator in our full model
+   
+    #lnCVR
+       pers_new$precisionlncvr <- 1/sqrt(pers_new$CVR_vi)
+       
+# assess publication bias in SMD and lnCVR effect sizes seperately:
+
+  MLMR_models_pers_pubbias <- meta_model_fits(pers_new, phylo_vcv, type = "pubbias")
+  
+# Extract the SMD and lnCVR results
+    smd_mods_pubbias <- MLMR_models_pers_pubbias["SMD",] # only inverts have significant publication bias for means
+    lnCVR_mods_pubbias <- MLMR_models_pers_pubbias["lnCVR",] 
+```
+
+# 11. Plots 
+
+## 11a. Orchard plots of effect sizes from personality trait models - SMD + lnCVR
+```{r}
+# create objects of each of the models first
+
+# lnCVR
+
+  # Bird lnCVR
+  bird_lncvr <- orchard_plot(lnCVR_mods_pers[[1]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
+  # Fish lnCVR
+  fish_lncvr <- orchard_plot(lnCVR_mods_pers[[2]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
+  # Invert lnCVR
+  invert_lncvr<- orchard_plot(lnCVR_mods_pers[[3]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
+  # Mammal lnCVR
+  mammal_lncvr <- orchard_plot(lnCVR_mods_pers[[4]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
+  # Reptile lnCVR
+  reptile_lncvr <- orchard_plot(lnCVR_mods_pers[[5]], mod = "personality_trait", xlab = "log Coefficient of Variance (lnCVR)", angle = 45, alpha = 0.5, transfm = "none")
+  
+# SMD
+  
+  # Bird SMD
+  bird_SMD <- orchard_plot(smd_mods_pers[[1]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none") #tanh pulls in outliers to make the graph easier to see (a bit dodgy?)
+  # Fish SMD
+  fish_SMD <- orchard_plot(smd_mods_pers[[2]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
+  # Invert SMD
+  invert_SMD<- orchard_plot(smd_mods_pers[[3]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
+  # Mammal SMD
+  mammal_SMD <- orchard_plot(smd_mods_pers[[4]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
+  # Reptile SMD
+  reptile_SMD <- orchard_plot(smd_mods_pers[[5]], mod = "personality_trait", xlab = "Standardised mean difference", angle = 45, alpha = 0.5, transfm = "none")
+
+# putting SMD and lnCVR plots together in the one image
+  # window size for orchard plots
+  # dev.new(width=10,height=5,noRStudioGD = TRUE)
+
+# the precision guides on the plots are a bit ugly, collect them to the side and crop them out   
+  
+  # mammals 
+  
+mammal_SMD + mammal_lncvr + plot_layout(guides = 'collect') 
+# ggsave("mammal_orchards.pdf") - save image
+```
+
+reptiles
+```{r}
+# orchard plots
+reptile_SMD + reptile_lncvr + plot_layout(guides = 'collect') 
+# ggsave("mammal_orchards.pdf") - save image
+```
+
+birds
+```{r}
+bird_SMD + bird_lncvr + plot_layout(guides = 'collect') 
+# ggsave("mammal_orchards.pdf") - save image
+```
+
+fish
+```{r}
+fish_SMD + fish_lncvr + plot_layout(guides = 'collect') 
+# ggsave("mammal_orchards.pdf") - save image
+```
+
+inverts
+```{r}
+invert_SMD + invert_lncvr + plot_layout(guides = 'collect')
+# ggsave("mammal_orchards.pdf") - save image
+```
+
+The precision guides will get cropped out when joining the orchard plots and phylogenies together in PowerPoint. 
+
+## 11b. phylogenetic trees with heatmaps
+
+Using ggtree to plot lots of complex data onto phylogenetic trees
+see: https://guangchuangyu.github.io/ggtree-book/chapter-ggtree.html for more information about using ggtree
+```{r}
+# install ggtree using this method:
+  source("https://bioconductor.org/biocLite.R")
+  BiocManager::install("ggtree")
+  library(ggtree)
+
+# load SSD data from figs_data.csv because it was too hard to sort with code!
+  figs_data <- read.csv("./data/figs_data.csv", stringsAsFactors = FALSE)
+
+```
+
+## bird tree
+```{r}
+# setting up the basic tree structure
+  # load tree, set node colours
+birdtree <- read.tree("./trees/bird_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.birdtree <- drop.tip(birdtree, setdiff(birdtree$tip.label, bird_data$spp_name_phylo)) 
+
+# define objects for the plot
+species <- pruned.birdtree$tip.label
+
+rownames(bird_data) <- pruned.birdtree$tip.label
+
+# set window size
+dev.new(width=7, height=6,noRStudioGD = TRUE) #opens quartz window of set size
+
+ # tree structure (cladogram, circular)
+p <- ggtree(pruned.birdtree, branch.length='none', layout='circular') %<+% bird_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=4, hjust=0) 
+
+# now need to make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_bird <- as.data.frame(pers_new %>%
+  filter(taxo_group == "bird")) 
+  
+  # make this a matrix-style dataframe
+      pers_bird <- data.frame(pers_bird %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_bird <- data.frame(pers_bird %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_bird) <- pers_bird$spp_name_phylo 
+    
+    pers_bird <- pers_bird[,2:6]
+
+  # matrix    
+    birds_matrix <- data.matrix(pers_bird) 
+    
+  # add the heatmap data to our plot
+bird_plot <- gheatmap(p, birds_matrix, offset = 40, 
+          low = "white", high = "mediumseagreen", color=NULL, 
+          colnames_position="bottom", 
+          colnames_angle=60, colnames_offset_y = 1, 
+          hjust=0, font.size=2)
+
+# ggsave("birdphylo.pdf") #saves how it looks in the plot window
+```
+
+## mammals
+```{r}
+# subset dataset to include only mammals
+ mammal_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "mammal"))
+ 
+ row.names(mammal_data) <- mammal_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+mammaltree <- read.tree("./trees/mammal_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.mammaltree <- drop.tip(mammaltree, setdiff(mammaltree$tip.label, mammal_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(mammal_data) <- pruned.mammaltree$tip.label
+
+# set window
+# dev.new(width=7,height=6,noRStudioGD = TRUE)
+
+ # tree structure (cladogram, circular)
+p2 <- ggtree(pruned.mammaltree, branch.length='none', layout='circular') %<+% mammal_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=3, hjust=0) +
+  theme(legend.position = 'right')
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_mammal <- as.data.frame(pers_new %>%
+  filter(taxo_group == "mammal")) 
+  
+  # make this a matrix-style dataframe
+      pers_mammal <- data.frame(pers_mammal %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_mammal <- data.frame(pers_mammal %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_mammal) <- pers_mammal$spp_name_phylo 
+    
+    pers_mammal <- pers_mammal[,2:6]
+
+  # matrix    
+    mammal_matrix <- data.matrix(pers_mammal) #yay!
+    
+  # add the heatmap data to our plot
+  mammal_plot <- gheatmap(p2, mammal_matrix, offset = 22, 
+              low = "white", high = "mediumseagreen", color=NULL, 
+              colnames_position="bottom", 
+              colnames_angle=60, colnames_offset_y = 1, 
+              hjust=0, font.size=2.5) 
+
+# ggsave("mammalphylo.pdf", dpi = 300)
+
+```
+
+## reptiles
+```{r}
+# subset dataset to include only reptiles
+ rep_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "reptilia"))
+ 
+ row.names(rep_data) <- rep_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+reptree <- read.tree("./trees/reptile_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.reptree <- drop.tip(reptree, setdiff(reptree$tip.label, rep_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(rep_data) <- pruned.reptree$tip.label
+
+# set window size
+#dev.new(width=7,height=6,noRStudioGD = TRUE)
+
+ # tree structure (cladogram, circular)
+p3 <- ggtree(pruned.reptree, branch.length='none', layout='circular') %<+% rep_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=4, hjust=0) # fan shape because we only have 10 species
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_rep <- as.data.frame(pers_new %>%
+  filter(taxo_group == "reptilia")) 
+  
+  # make this a matrix-style dataframe
+      pers_rep <- data.frame(pers_rep %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_rep <- data.frame(pers_rep %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_rep) <- pers_rep$spp_name_phylo 
+    
+    pers_rep <- pers_rep[,2:6]
+
+  # matrix    
+    rep_matrix <- data.matrix(pers_rep) 
+    
+  # add the heatmap data to our plot
+rep_plot <- gheatmap(p3, rep_matrix, offset = 25, width = 2,
+            low = "white", high = "mediumseagreen", color=NULL, 
+            colnames_position="top", 
+            colnames_angle=60, colnames_offset_y = 0, 
+             hjust=0, font.size=2) #just not aligning properly 
+        
+  # save it
+  #ggsave("reptilephylo.pdf", dpi = 320)
+```
+
+## fish
+```{r}
+# subset dataset to include only fish
+ fish_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "fish"))
+ 
+ row.names(fish_data) <- fish_data$spp_name_phylo 
+ 
+ # window size
+ #dev.new(width=7,height=6,noRStudioGD = TRUE)
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+fishtree <- read.tree("./trees/fish_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.fishtree <- drop.tip(fishtree, setdiff(fishtree$tip.label, fish_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(fish_data) <- pruned.fishtree$tip.label
+
+ # tree structure (cladogram, circular)
+p4 <- ggtree(pruned.fishtree, branch.length='none', layout='circular') %<+% fish_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=4, hjust=0) +
+  theme(legend.position = "right")
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_fish <- as.data.frame(pers_new %>%
+  filter(taxo_group == "fish")) 
+  
+  # make this a matrix-style dataframe
+      pers_fish <- data.frame(pers_fish %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_fish <- data.frame(pers_fish %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_fish) <- pers_fish$spp_name_phylo 
+    
+    pers_fish <- pers_fish[,2:6]
+
+  # matrix    
+    fish_matrix <- data.matrix(pers_fish) 
+    
+  # add the heatmap data to our plot
+     fish_plot <- gheatmap(p4, fish_matrix, offset = 55, width = 2,
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=60, colnames_offset_y = 1, 
+         hjust=0.5, font.size=2) 
+
+    # save it
+  #ggsave("fishphylo.pdf", dpi = 320) #legends in a weird order
+```
+
+## inverts
+```{r}
+# subset dataset to include only inverts
+  invert_data <- as.data.frame(figs_data %>%
+    filter(taxo_group == "invertebrate"))
+ 
+ row.names(invert_data) <- invert_data$spp_name_phylo 
+ 
+# setting up the basic tree structure
+ 
+  # load tree, set node colours
+inverttree <- read.tree("./trees/invert_species.nwk")
+
+# prune tree to get rid of species we no longer have data for
+pruned.inverttree <- drop.tip(inverttree, setdiff(inverttree$tip.label, invert_data$spp_name_phylo)) 
+
+# set rownames for labelling tips
+rownames(invert_data) <- pruned.inverttree$tip.label
+
+ # tree structure (cladogram, circular)
+p5 <- ggtree(pruned.inverttree, branch.length='none', layout='circular') %<+% invert_data + 
+  geom_tippoint(aes(color=SSD_index)) + 
+  scale_color_gradient2(midpoint = 0, low = "red3", mid = "seashell2", high = "deepskyblue2") + 
+  geom_tiplab2(align=T, linetype=NA, size=2, offset=20, hjust=0.5) +
+  theme(legend.position = "right")
+
+# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!
+    # subset dataset
+  pers_invert <- as.data.frame(pers_new %>%
+  filter(taxo_group == "invertebrate")) 
+  
+  # make this a matrix-style dataframe
+      pers_invert <- data.frame(pers_invert %>%
+      group_by(spp_name_phylo, personality_trait) %>%
+      summarise(n = n()))
+      
+      pers_invert <- data.frame(pers_invert %>% 
+                                spread(personality_trait, n, fill = 0))
+      
+    row.names(pers_invert) <- pers_invert$spp_name_phylo 
+    
+    pers_invert <- pers_invert[,2:6]
+
+  # matrix    
+    invert_matrix <- data.matrix(pers_invert) 
+    
+  # add the heatmap data to our plot
+     invertplot <- gheatmap(p5, invert_matrix, offset = 40, width = 1.5, 
+         low = "white", high = "mediumseagreen", color=NULL, 
+         colnames_position="bottom", 
+         colnames_angle=45, colnames_offset_y = 0, 
+         hjust=0, font.size=2)
+
+# set window size
+#dev.new(width = 7, height = 6, noRStudioGD = TRUE)
+
+# save plot
+#ggsave("invertphylo.pdf", dpi = 320) #legend in a weird order
+```
+
+These plots were edited together in PowerPoint alongside the addition of silhouettes from PhyloPic to create Figures 1 & 2.
+
+# Done! 
