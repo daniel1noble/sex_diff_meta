@@ -241,7 +241,7 @@ We constructed seperate phylogenetic trees for each taxonomic group. The tree fo
 
 ## Before we begin, we need to run a sensitivity analysis to see if score data is ok to use
 
-With these models, we are just including score as a moderator term to compare with the rest of the dataset (some of which has already been transformed, we just can't do that with scores).
+With these models, we are just including score as a moderator term to compare with the rest of the dataset (some of which has already been transformed, we just can't do that with scores). Model summaries are presented in Supplementary Table S15.
 ```{r}
 # make a new column where data type is binary (score or other)
 
@@ -716,7 +716,7 @@ We collected some additional information from the literature (mating system) and
 
 ## 8a. mating system
 
-Do effect sizes from monogamous or multiply-mating species differ? Model summaries presented in Supplementary Table S?
+Do effect sizes from monogamous or multiply-mating species differ? Model summaries presented in Supplementary Table S9.
 ```{r}
 # what have we got to work with?
     pers_new %>%
@@ -740,7 +740,7 @@ Do effect sizes from monogamous or multiply-mating species differ? Model summari
 
 ## 8b. age
 
-Do effect sizes from adults (sexually mature) or juveniles differ? Model summaries presented in Supplementary Table S?
+Do effect sizes from adults (sexually mature) or juveniles differ? Model summaries presented in Supplementary Table S10
 ```{r}
 # make a table
   data.frame(pers_new %>%
@@ -757,7 +757,7 @@ Do effect sizes from adults (sexually mature) or juveniles differ? Model summari
 
 ## 8c. population
 
-Do effect sizes from wild animals or lab animals differ? Model summaries presented in Supplementary Table S?
+Do effect sizes from wild animals or lab animals differ? Model summaries presented in Supplementary Table S11.
 ```{r}
 # table
   data.frame(pers_new %>%
@@ -774,7 +774,7 @@ Do effect sizes from wild animals or lab animals differ? Model summaries present
 
 ## 8d. study environment
 
-Do effect sizes collected in the wild or the lab differ? Model summaries presented in Supplementary Table S?
+Do effect sizes collected in the wild or the lab differ? Model summaries presented in Supplementary Table S12.
 ```{r}
 # table
   data.frame(pers_new %>%
@@ -791,7 +791,7 @@ Do effect sizes collected in the wild or the lab differ? Model summaries present
 
 ## 8e. study type 
 
-Do effect sizes from observational or experimental study design differ? Model summaries presented in Supplementary Table S?
+Do effect sizes from observational or experimental study design differ? Model summaries presented in Supplementary Table S13.
 ```{r}
 # Let's see what we have to work with
   data.frame(pers_new %>%
@@ -900,7 +900,7 @@ Do effect sizes from observational or experimental study design differ? Model su
 
 We need to refit our 3 main models accounting for any dependency resulting from the same traits measured on the same animals (likely a big source of non-independence) and any other shared covariance. We added the D matrices to the residual variance matrix as opposed to the sampling covariance. We chose to set 3 different levels of dependency (rho): 0.3, 0.5 an 0.8. 
 
-Model summaries are also presented in Supplementary Tables S?-S?
+Model summaries are also presented in Supplementary Tables S16-S24. 
 ```{r}
  # Create the dependency matrices; try 3 levels of rho = 0.3, 0.5, 0.8
       
@@ -1026,7 +1026,7 @@ We can use: 1) funnel plots to look for asymmetry across all effect sizes for bo
 
 Since our data has very high heterogeneity, we instead included precision as a moderator term in our full model (personality trait model) to see if study precision is driving effect size patterns. The logic here is that studies with low or high precision can have a significant influence and so including precision as a moderator will allow us to see if precision is significant (and which direction).
 
-Model summaries are presented in Supplementary Table S?
+Model summaries are presented in Supplementary Table S14.
 ```{r}
  # adding precision to dataset as a moderator term
     #SMD
