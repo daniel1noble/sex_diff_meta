@@ -1,238 +1,238 @@
-species_no,species_name,taxo_group,m_BS,m_SE,f_BS,f_SE,error type,measure,measurement,SSD_index,logF-logM,data_available,mating_system,parental_care
-1,Abax parallelepipedus,invertebrate,0.234,0.014,0.251,0.007,,mass,body mass (g),-0.068,0.03,2,NA,none
-2,Acanthis flammea,bird,78.1,0.03,77.1,0.03,SE,partial.length,wing length (mm),0.013,-0.01,2,monogamy,biparental
-3,Acheta domesticus,invertebrate,2.94,0.031,2.941,0.033,SE,partial.length,pronotum length (mm),0,0,2,multiple mating,none
-4,Aethopyga christinae,bird,100,NA,85,NA,NA,length,body length (mm),0.176,-0.071,2,NA,NA
-5,Agelenopsis pennsylvanica,invertebrate,10.23,NA,11.675,NA,NA,length,body length (mm),-0.124,0.06,1,multiple mating,maternal
-6,Ailuropoda melanoleuca,mammal,112750,4250,76670,1247,SE,mass,body mass (g),0.471,-0.167,2,multiple mating,maternal
-7,Alectoris rufa,bird,165,,157,,NA,partial.length,wing length (mm),0.051,-0.02,2,monogamy,biparental
-8,Amandava amandava,bird,8.5,0.5,NA,NA,NA,mass,body mass (g),,,1,monogamy,biparental
-9,Amatitlania nigrofasciata,fish,79.73,1.57,42.95,1.65,SE,length,standard length (mm),0.856,-0.27,2,monogamy,biparental
-10,Amphibolurus muricatus,reptilia,91.7,1.2,90.5,1,SE,length,snout-ventral length (mm),0.013,-0.006,2,multiple mating,maternal
-11,Amphilophus citrinellus,fish,148.02,13.3,116.97,10.98,SD,length,standard length (mm),0.265,-0.102,2,monogamy,biparental
-12,Anas castanea,bird,660,65,590,138,SD,mass,body mass (g),0.119,-0.049,2,monogamy,biparental
-13,Anas crecca,bird,320,NA,291,NA,NA,mass,body mass (g),0.1,-0.041,2,monogamy,maternal
-14,Anas platyrhynchos,bird,1246,108,1095,106,SD,mass,body mass (g),0.138,-0.056,2,monogamy,biparental
-15,Anas rhynchotis,bird,637,46.9,614,46.2,SD,mass,body mass (g),0.037,-0.016,2,multiple mating,maternal
-16,Anelosimus studiosus,invertebrate,0.002314,0.000439,0.002597,0.000521,SD,mass,body mass (g),-0.109,0.05,2,multiple mating,maternal
-17,Anser anser,bird,3509,321,3108,274,SD,mass,body mass (g),0.129,-0.053,2,monogamy,maternal
-18,Aphanius fasciatus,fish,43.52,7.19,43.28,4.47,SD,length,standard length (mm),0.006,-0.002,2,multiple mating,none
-19,Aphanius iberus,fish,19.4,NA,21.2,NA,NA,length,standard length (mm),-0.085,0.039,2,multiple mating,none
-20,Aquarius remigis,invertebrate,14.48,0.61,15.66,0.6,SD,length,body length (mm),-0.075,0.034,2,multiple mating,none
-21,Archocentrus nigrofasciatus,fish,68.5,NA,45,NA,NA,length,body length (mm),0.522,-0.182,2,monogamy,biparental
-22,Asellus aquaticus,invertebrate,10.2,0.424,7.55,0.071,SD,length,body length (mm),0.351,-0.131,2,multiple mating,maternal
-23,Ateles geoffroyi,mammal,7780,NA,7290,NA,NA,mass,body mass (g),0.067,-0.028,2,multiple mating,maternal
-24,Ateles hybridus,mammal,NA,NA,NA,NA,NA,NA,NA,,,0,multiple mating,maternal
-25,Athene cunicularia,bird,146,11.7,156,20,SD,mass,body mass (g),-0.064,0.029,2,monogamy,biparental
-26,Aythya australis,bird,902,NA,838,NA,NA,mass,body mass (g),0.076,-0.032,2,monogamy,maternal
-27,Aythya fuligula,bird,723,NA,680,NA,NA,mass,body mass (g),0.063,-0.027,2,monogamy,maternal
-28,Bathynomus giganteus,invertebrate,386.8,342.2,265,60.8,SD,mass,body mass (g),0.46,-0.164,2,multiple mating,maternal
-29,Betta splendens,fish,39.2,0.624,36.1,0.557,SD,length,body length (mm),0.086,-0.036,2,monogamy,paternal
-30,Biziura lobata,bird,874.5,41.5,723.8,26.9,SD,partial.length,wing length (mm),0.208,-0.08,2,multiple mating,maternal
-31,Booralana tricarinata,invertebrate,4.6,1.8,4.6,1.2,SD,mass,body mass (g),0,0,2,NA,NA
-32,Brachyrhaphis episcopi,fish,27.8,1.3,35.1,0.8,SE,length,standard length (mm),-0.208,0.101,2,multiple mating,none
-33,Brachyrhaphis rhabdophora,fish,29.2,4.7,34.5,6.5,SD,length,standard length (mm),-0.154,0.072,2,multiple mating,none
-34,Bubo bubo,bird,93.8,4.5,102.5,6.58,SD,partial.length,tarsus length (mm),-0.085,0.04,2,monogamy,biparental
-35,Bucanetes githagineus,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-36,Bucephala clangula,bird,1120,13,711,14.1,SD,mass,body mass (g),0.575,-0.197,2,monogamy,biparental
-37,Callithrix geoffroyi,mammal,290,NA,190,NA,NA,mass,body mass (g),0.526,-0.184,2,monogamy,biparental
-38,Callosobruchus chinensis,invertebrate,0.00349,0.00071,0.00434,0.00087,SD,mass,body mass (g),-0.196,0.095,2,multiple mating,biparental
-39,Callosobruchus maculatus,invertebrate,0.00387,0.00084,0.00467,0.00095,SD,mass,body mass (g),-0.171,0.082,2,multiple mating,none
-40,Canis latrans,mammal,1140,200,960,100,SE,mass,body mass (g),0.188,-0.075,2,monogamy,biparental
-41,Capreolus capreolus,mammal,27680,NA,26730,NA,NA,mass,body mass (g),0.036,-0.015,2,multiple mating,maternal
-42,Carabus nemoralis,invertebrate,14.15,NA,14.98,NA,NA,partial.length,elytron length (mm),-0.055,0.025,2,multiple mating,maternal
-43,Carcinus maenas,invertebrate,44.54,1.77,47.21,1.01,SE,partial.length,carapace width (mm),-0.057,0.025,2,multiple mating,maternal
-44,Carduelis cannabina,bird,20.2,NA,18.9,NA,NA,mass,body mass (g),0.069,-0.029,2,monogamy,maternal
-45,Carduelis carduelis,bird,75.5,,73.3,,SE,partial.length,wing length (mm),0.03,-0.013,2,multiple mating,biparental
-46,Carduelis chloris,bird,91.7,1.8,87.1,1.9,SD,partial.length,wing length (mm),0.053,-0.022,2,monogamy,biparental
-47,Carpodacus erythrinus,bird,25,NA,23,NA,NA,mass,body mass (g),0.087,-0.036,2,monogamy,maternal
-48,Cavia aperea,mammal,678,91,593,30,SD,mass,body mass (g),0.143,-0.058,2,multiple mating,maternal
-49,Cereopsis novaehollandiae,bird,4135,NA,3180,NA,NA,mass,body mass (g),0.3,-0.114,2,monogamy,biparental
-50,Cettia cetti,bird,15.2,1,11.5,0.8,SD,mass,body mass (g),0.322,-0.121,2,multiple mating,biparental
-51,Charadrius hiaticula,bird,63.3,NA,64.8,NA,NA,mass,body mass (g),-0.023,0.01,2,monogamy,cooperative
-52,Charadrius ruficapilus,bird,105.1,3.19,104,2.48,SD,partial.length,wing length (mm),0.011,-0.005,2,monogamy,biparental
-53,Chenonetta jubata,bird,815,NA,800,NA,NA,mass,body mass (g),0.019,-0.008,2,monogamy,none
-54,Cherax destructor,invertebrate,109.87,6.8,112.21,5.9,SE,length,body length (mm),-0.021,0.009,2,multiple mating,maternal
-55,Chlamydotis undulata,bird,1960,NA,1150,NA,NA,mass,body mass (g),0.704,-0.232,2,multiple mating,maternal
-56,Chlorocebus pygerythrus,mammal,413,NA,257,NA,NA,mass,body mass (g),0.607,-0.206,2,multiple mating,biparental
-57,Columba palumbus,bird,250.93,7.2,248.25,6.5,SD,partial.length,wing length (mm),0.011,,0,monogamy,biparental
-58,Copsychus saularis,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-59,Corcorax melanorhamphos,bird,381.54,29.28,372.89,37.32,SD,mass,body mass (g),0.023,-0.01,2,monogamy,cooperative
-60,Coturnix japonica,bird,106.8,26.6,134.3,14.3,NA,mass,body mass (g),-0.205,0.1,2,multiple mating,biparental
-61,Crocuta crocuta,mammal,48700,NA,55600,NA,NA,mass,body mass (g),-0.124,0.058,2,multiple mating,maternal
-62,Cyanistes caeruleus,bird,19.25,NA,18.1,NA,NA,mass,body mass (g),0.064,-0.027,2,monogamy,biparental
-63,Cyanocitta stelleri,bird,138.1,1.1,134,0.5,SE,partial.length,wing length (mm),0.031,-0.013,2,monogamy,biparental
-64,Cygnus atratus,bird,6990,880,5330,750,SD,mass,body mass (g),0.311,-0.118,2,monogamy,biparental
-65,Cyprinus carpio,fish,283,7.9,282.86,6.06,SE,length,body length (mm),0,0,2,multiple mating,none
-66,Danio rerio,fish,27.58,0.96,30.19,1.41,SD,length,standard length (mm),-0.086,0.039,2,multiple mating,none
-67,Dendrocopos major,bird,76,NA,72.7,NA,NA,mass,body mass (g),0.045,-0.019,2,monogamy,biparental
-68,Diomedea exulans,bird,9440,590,7840,620,SD,mass,body mass (g),0.204,-0.081,2,monogamy,biparental
-69,Diploptera punctata,invertebrate,0.704,0.013,0.811,0.008,SE,partial.length,pronotum width (mm),-0.132,0.061,2,multiple mating,maternal
-70,Drosophila kurseongensis,invertebrate,NA,NA,NA,NA,NA,NA,NA,,,0,NA,none
-71,Drosophila melanogaster,invertebrate,0.00076,0.000005,0.00124,0.000008,SE,mass,body mass (g),-0.387,0.213,2,multiple mating,none
-72,Drosophila prolongata,invertebrate,1.69,NA,1.45,NA,NA,partial.length,thorax length (mm),0.166,-0.067,2,NA,none
-73,Elaphe obsoleta,reptilia,196,0.1,175,0.1,SE,partial.length,tail length (mm),0.12,-0.049,2,multiple mating,maternal
-74,Emberiza cia,bird,24.2,1.6,22.7,1.6,SD,mass,body mass (g),0.066,-0.028,2,monogamy,biparental
-75,Emberiza citrinella,bird,85.3,2.2,NA,NA,SD,partial.length,wing length (mm),,,1,monogamy,biparental
-76,Emberiza schoeniclus,bird,20,0.45,19.6,0.6,SE,mass,body mass (g),0.02,-0.009,2,monogamy,biparental
-77,Ensatina eschscholtzii,reptilia,101.7,NA,96.9,NA,NA,length,total length (mm),0.05,-0.021,2,NA,maternal
-78,Eospalax smithii,mammal,NA,NA,NA,NA,NA,NA,NA,,,0,NA,maternal
-79,Epthianura albifrons,bird,70.3,0.1,69.3,0.2,SE,partial.length,wing length (mm),0.014,-0.006,2,monogamy,biparental
-80,Eriocheir sinensis,invertebrate,6.95,0.14,6.81,0.18,SE,partial.length,carapace width (mm),0.021,-0.009,2,monogamy,maternal
-81,Eris militaris,invertebrate,0.023285,0.000925,0.024013,0.001876,SE,mass,body mass (g),-0.03,0.013,2,multiple mating,maternal
-82,Euprymna tasmanica,invertebrate,22.575,0.978,22.375,2.872,SD,length,body size (mm),0.009,-0.004,2,multiple mating,none
-83,Falco tinnunculus,bird,180,13,224,17,SD,mass,body mass (g),-0.196,0.095,2,monogamy,biparental
-84,Ficedula hypoleuca,bird,12.2,0.5,15.6,0.9,SD,mass,body mass (g),-0.218,0.107,2,monogamy,biparental
-85,Fringilla coelebs,bird,21.9,1.7,20.9,1.5,SD,mass,body mass (g),0.048,-0.02,2,monogamy,maternal
-86,Galerida cristata,bird,39,NA,41.9,NA,NA,mass,body mass (g),-0.069,0.031,2,monogamy,biparental
-87,Gallus gallus,bird,1008.2,8.74,705,5.36,SE,mass,body mass (g),0.43,-0.155,2,multiple mating,maternal
-88,Gambusia affinis,fish,23.476,0.466,29.854,0.756,SE,length,standard length (mm),-0.214,0.104,2,multiple mating,maternal
-89,Gambusia holbrooki,fish,24.6,2.5,34.1,4.9,SD,length,total length (mm),-0.279,0.142,2,multiple mating,maternal
-90,Gambusia hubbsi,fish,22.8,0.4,26.5,0.7,SE,length,standard length (mm),-0.14,0.065,2,multiple mating,maternal
-91,Gammarus fossarum,invertebrate,19.5,0.7,17.8,0.5,,length,total body length (mm),0.096,-0.04,2,multiple mating,maternal
-92,Gasterosteus aculeatus,fish,57.06,1.81,60.95,3.31,SD,length,standard length (mm),-0.064,0.029,2,multiple mating,paternal
-93,Gerris gracilicornis,invertebrate,12.24,0.41,14.44,0.47,,length,total body length (mm),-0.152,0.072,2,multiple mating,none
-94,Grallina cyanoleuca,bird,91.6,12.1,81.3,7.4,SD,mass,body mass (g),0.127,-0.052,2,monogamy,biparental
-95,Gryllus bimaculatus,invertebrate,7.35,0.07,7.49,0.09,SE,partial.length,pronotum width (mm),-0.019,0.008,2,multiple mating,none
-96,Gymnorhina tibicen,bird,NA,NA,NA,NA,NA,NA,NA,,,0,multiple mating,biparental
-97,Heterodontus portusjacksoni,fish,950.67,24.01,1108.8,149.42,SD,length,total body length (mm),-0.143,0.067,2,multiple mating,none
-98,Heterozius rotundifrons,invertebrate,17.3,0.36,16,0.42,SE,partial.length,carapace width (mm),0.081,-0.034,2,multiple mating,maternal
-99,Himantopus himantopus,bird,119,NA,117.5,NA,NA,partial.length,tarsus length (mm),0.013,-0.006,2,monogamy,biparental
-100,Hirundo rustica,bird,125,0.52,121.74,0.7,SE,partial.length,wing length (mm),0.027,-0.011,2,monogamy,biparental
-101,Homarus gammarus,invertebrate,89.825,5.441,86.5,3.652,SD,partial.length,carapace length (mm),0.038,-0.016,2,monogamy,biparental
-102,Hypsophrys nicaraguensis,fish,41.6,0.5,36.6,0.4,,length,total length (mm),0.137,-0.056,2,NA,biparental
-103,Ictidomys tridecemlineatus,mammal,153,20.1,139,36.1,,mass,body mass (g),0.101,-0.042,2,multiple mating,maternal
-104,Ischnura elegans,invertebrate,23.98,0.469,25.353,0.505,SE,mass,body mass (g),-0.054,0.024,2,multiple mating,none
-105,Ischnura genei,invertebrate,17.632,0.366,20.323,0.251,SE,mass,body mass (g),-0.132,0.062,2,multiple mating,none
-106,Ischnura graellsii,invertebrate,16.64,0.227,18.604,0.275,SE,mass,body mass (g),-0.106,0.048,2,multiple mating,none
-107,Ischnura pumillio,invertebrate,16.412,0.719,17.777,0.674,SE,mass,body mass (g),-0.077,0.035,2,multiple mating,none
-108,Lampropholis delicata,reptilia,34.95,0.43,35.61,1.78,SE,length,snout-ventral length (mm),-0.019,0.008,2,NA,none
-109,Lanius collurio,bird,94.71,1.93,94.03,1.98,,partial.length,wing length (mm),0.007,-0.003,2,monogamy,biparental
-110,Larinioides sclopetarius,invertebrate,0.038,0.00084,0.06,0.00142,SE,mass,body mass (g),-0.367,0.198,2,multiple mating,maternal
-111,Lasiopodomys mandarinus,mammal,101.5,NA,110.8,NA,NA,length,body length (mm),-0.084,0.038,2,multiple mating,biparental
-112,Leucocarbo verrucosus,bird,2400,200,2100,200,SD,mass,body mass (g),0.143,-0.058,2,monogamy,biparental
-113,Liolaemus nitidus,reptilia,82.71,3.67,74.24,2.5,SE,length,snout-ventral length (mm),0.114,-0.047,2,NA,NA
-114,Lissotriton boscai,reptilia,1.11,0.02,1.49,0.03,SE,mass,body mass (g),-0.255,0.128,2,multiple mating,NA
-115,Lullula arborea,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-116,Macaca arctoides,mammal,17787,NA,12100,NA,NA,mass,body mass (g),0.47,-0.167,2,multiple mating,biparental
-117,Macaca assamensis,mammal,11300,NA,6900,NA,NA,mass,body mass (g),0.638,-0.214,2,multiple mating,biparental
-118,Macropus agilis,mammal,20700,1900,10200,300,SE,mass,body mass (g),1.029,-0.307,2,multiple mating,maternal
-119,Macropus giganteus,mammal,66000,NA,32000,NA,NA,mass,body mass (g),1.063,-0.314,2,multiple mating,maternal
-120,Malurus cyaneus,bird,11.3,0.8,10.5,0.8,SD,mass,body mass (g),0.076,-0.032,2,monogamy,cooperative
-121,Mantis religiosa,invertebrate,0.48,0.19,1.88,0.36,SD,mass,body mass (g),-0.745,0.593,2,multiple mating,maternal
-122,Megadyptes antipodes,bird,5530,340,5130,320,SD,mass,body mass (g),0.078,-0.033,2,monogamy,biparental
-123,Melopsittacus undulatus,bird,29.2,1.9,28.8,2.1,SD,mass,body mass (g),0.014,-0.006,2,monogamy,biparental
-124,Microcebus murinus,mammal,90.2,2.8,109,3.8,SE,mass,body mass (g),-0.172,0.082,2,multiple mating,maternal
-125,Micromys minutus,mammal,63.3,NA,75.2,NA,NA,length,body length (mm),-0.158,0.075,2,NA,maternal
-126,Microtus arvalis,mammal,35.7,7.2,30.4,4.1,SE,mass,body mass (g),0.174,-0.07,2,multiple mating,biparental
-127,Microtus guentheri,mammal,44.7,6.7,43.3,8.3,SE,mass,body mass (g),0.032,-0.014,2,NA,biparental
-128,Microtus ochrogaster,mammal,41.6,6.5,41.7,6.4,,mass,body mass (g),-0.002,0.001,2,monogamy,biparental
-129,Miliaria calandra,bird,53.6,4.1,43.9,3.1,SD,mass,body mass (g),0.221,-0.087,2,monogamy,maternal
-130,Molothrus ater,bird,49.62,4.07,39.14,2.8,,mass,body mass (g),0.268,-0.103,2,monogamy,none
-131,Motacilla alba,bird,22.3,NA,19.75,NA,NA,mass,body mass (g),0.129,-0.053,2,monogamy,biparental
-132,Motacilla cinerea,bird,18,1.4,17.2,1.4,SD,mass,body mass (g),0.047,-0.02,2,monogamy,biparental
-133,Motacilla flava,bird,19.35,NA,16.9,NA,NA,mass,body mass (g),0.145,-0.059,2,monogamy,biparental
-134,Mus musculus,mammal,35.52,1.63,26.57,0.39,SE,mass,body mass (g),0.337,-0.126,2,multiple mating,maternal
-135,Mus spicilegus,mammal,11.38,0.21,10.7,0.18,SE,mass,body mass (g),0.064,-0.027,2,monogamy,cooperative
-136,Mustela lutreola,mammal,976.6,21.3,667,58.8,SE,mass,body mass (g),0.464,-0.166,2,multiple mating,maternal
-137,Nannospalax ehrenbergi,mammal,175.6,4.23,137,1.92,SE,mass,body mass (g),0.282,-0.108,2,monogamy,maternal
-138,Nebria brevicollis,invertebrate,0.067237,0.001343,0.074077,0.00253,SE,mass,body mass (g),-0.092,0.042,2,NA,maternal
-139,Neochmia phaeton,bird,10,0.09,9.65,0.09,SE,mass,body mass (g),0.036,-0.015,2,monogamy,biparental
-140,Neogobius melanostomus,fish,63,33,69,29,SD,length,body length (mm),-0.087,0.04,2,multiple mating,paternal
-141,Neolamprologus caudopunctatus,fish,57.7,3.8,53.7,10,,length,standard length (mm),0.074,-0.031,2,monogamy,biparental
-142,Neolamprologus pulcher,fish,62,0.6,NA,NA,SE,length,standard length (mm),,,1,NA,cooperative
-143,Neovison vison,mammal,1310.2,38.9,780.7,21,SE,mass,body mass (g),0.678,-0.225,2,multiple mating,maternal
-144,Nothobranchius furzeri,fish,40,2.7,33,2.5,SD,length,total length (mm),0.212,-0.084,2,multiple mating,none
-145,Nuctenea umbratica,invertebrate,0.067,0.021,0.107,0.03,SD,mass,body mass (g),-0.374,0.203,2,monogamy,maternal
-146,Oenanthe oenanthe,bird,24,1.5,22.3,2.5,SD,mass,body mass (g),0.076,-0.032,2,monogamy,biparental
-147,Orconectes limosus,invertebrate,69.89,NA,62.26,NA,NA,length,total body length (mm),0.123,-0.05,2,multiple mating,maternal
-148,Oreochromis niloticus,fish,173,30.1,162,28.7,SD,length,standard length (mm),0.068,-0.029,2,multiple mating,maternal
-149,Oxyura australis,bird,787.5,NA,888,NA,NA,mass,body mass (g),-0.113,0.052,2,multiple mating,maternal
-150,Palaemon elegans,invertebrate,29.4,NA,38.34,NA,NA,length,body length (mm),-0.233,0.115,2,multiple mating,none
-151,Pan troglodytes,mammal,301,15.5,292,15.2,SD,partial.length,femur length (mm),0.031,-0.013,2,multiple mating,maternal
-152,Panopeus herbstii,invertebrate,24.33,1.983,23.986,2.296,SD,mass,body mass (g),0.014,-0.006,2,multiple mating,none
-153,Pararge aegeria,invertebrate,0.0592,0.0011,0.0889,0.002,SE,mass,body mass (g),-0.334,0.177,2,multiple mating,none
-154,Parus major,bird,20.01,0.09,19.43,0.1,SE,partial.length,tarsus length (mm),0.03,-0.013,2,monogamy,biparental
-155,Passer domesticus,bird,31.9,1.78,32.85,2.34,SD,mass,body mass (g),-0.029,0.013,2,monogamy,biparental
-156,Passer hispaniolensis,bird,28.7,1.91,,,SD,mass,body mass (g),,,0,monogamy,biparental
-157,Passer montanus,bird,53.969,3.281,52.58,3.104,SD,partial.length,wing length (mm),0.026,-0.011,2,monogamy,biparental
-158,Pelvicachromis pulcher,fish,46,1,38,1,SE,length,standard length (mm),0.211,-0.083,2,monogamy,biparental
-159,Perdix perdix,bird,399.1,25.1,390,37.8,SD,mass,body mass (g),0.023,-0.01,2,monogamy,maternal
-160,Pericrocotus flammeus,bird,90.5,,86.5,,NA,partial.length,wing length (mm),0.046,,0,multiple mating,maternal
-161,Pericrocotus solaris,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-162,Peromyscus californicus,mammal,44.36,2.1,44.39,1.56,,mass,body mass (g),-0.001,0,2,monogamy,biparental
-163,Peromyscus maniculatus,mammal,17.04,0.24,16.76,0.33,,mass,body mass (g),0.017,-0.007,2,multiple mating,maternal
-164,Petroica boodang,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-165,Petroica phoenicea,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-166,Phaedon cochleariae,invertebrate,0.00704,0.00086,0.00931,0.00088,SD,mass,body mass (g),-0.244,0.121,2,multiple mating,none
-167,Phasianus colchicus,bird,1317,NA,953,NA,NA,mass,body mass (g),0.382,-0.14,2,multiple mating,maternal
-168,Phodopus sungorus,mammal,89.3,NA,82.3,NA,NA,length,body length (mm),0.085,-0.035,2,multiple mating,maternal
-169,Phoenicopterus chilensis,bird,2700,NA,2310,NA,NA,mass,body mass (g),0.169,-0.068,2,monogamy,biparental
-170,Phoenicopterus roseus,bird,3540,NA,2530,NA,NA,mass,body mass (g),0.399,-0.146,2,monogamy,biparental
-171,Phoenicurus ochruros,bird,84.5,,,,,partial.length,wing length (mm),,,1,monogamy,cooperative
-172,Phoenicurus phoenicurus,bird,14.7,1.4,14.5,1.4,SD,mass,body mass (g),0.014,-0.006,2,monogamy,biparental
-173,Phylloscopus collybita,bird,61.95,NA,56.57,NA,NA,partial.length,wing length (mm),0.095,-0.039,2,monogamy,maternal
-174,Pica pica,bird,221,NA,191,NA,NA,mass,body mass (g),0.157,-0.063,2,monogamy,biparental
-175,Picus viridis,bird,NA,NA,215,NA,NA,mass,body mass (g),,,1,monogamy,biparental
-176,Plecturocebus moloch,mammal,1020,NA,956,NA,NA,mass,body mass (g),0.067,-0.028,2,monogamy,maternal
-177,Plethodon cinereus,reptilia,41.65,0.69,40.73,0.82,SE,length,snout-ventral length (mm),0.023,-0.01,2,monogamy,maternal
-178,Poecile palustris,bird,11.78,0.35,10.98,0.57,SD,mass,body mass (g),0.073,-0.031,2,monogamy,biparental
-179,Poecilia reticulata,fish,20.06,0.23,26.34,0.28,SE,length,standard length (mm),-0.238,0.118,2,multiple mating,maternal
-180,Procambarus clarkii,invertebrate,48.7,NA,46.7,NA,NA,partial.length,carapace length (mm),0.043,-0.018,2,multiple mating,maternal
-181,Prunella modularis,bird,71.1,1.3,NA,NA,SD,partial.length,wing length (mm),,,1,monogamy,biparental
-182,Psephotus haematonotus,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-183,Pteromys volans,mammal,144,NA,155,NA,NA,mass,body mass (g),-0.071,0.032,2,multiple mating,maternal
-184,Pterostichus oblongopunctatus,invertebrate,0.0514,NA,0.06,NA,NA,mass,body mass (g),-0.143,0.067,2,NA,none
-185,Puma concolor,mammal,42300,1900,26700,1700,SE,mass,body mass (g),0.584,-0.2,2,multiple mating,maternal
-186,Pycnonotus jocosus,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-187,Pycnonotus sinensis,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-188,Pyrrhula pyrrhula,bird,93.65,1.54,92.5,2.1,SD,partial.length,wing length (mm),0.012,-0.005,2,monogamy,biparental
-189,Rattus norvegicus,mammal,334.5,NA,230.5,NA,NA,mass,body mass (g),0.451,-0.162,2,multiple mating,maternal
-190,Regulus regulus,bird,5.6,0.4,5.5,0.4,SD,mass,body mass (g),0.018,-0.008,2,monogamy,biparental
-191,Rhabdomys dilectus,mammal,7.04,NA,9.31,NA,NA,mass,body mass (g),-0.244,0.121,2,NA,biparental
-192,Rhabdomys pumilio,mammal,45.7,7.7,43,7.6,,mass,body mass (g),0.063,-0.026,2,multiple mating,biparental
-193,Rhinella marina,reptilia,103.388,3.853,137.426,9.177,SE,mass,body mass (g),-0.248,0.124,2,multiple mating,none
-194,Saguinus oedipus,mammal,451.4,62.1,473,57.3,SD,mass,body mass (g),-0.046,0.02,2,monogamy,cooperative
-195,Saxicola rubetra,bird,75.8,NA,73.4,NA,NA,partial.length,wing length (mm),0.033,-0.014,2,monogamy,biparental
-196,Saxicola torquata,bird,68.62,1.5,66.33,1.78,SD,partial.length,wing length (mm),0.035,-0.015,2,monogamy,biparental
-197,Sciurus vulgaris,mammal,305,25,316,31,SD,mass,body mass (g),-0.035,0.015,2,multiple mating,maternal
-198,Serinus serinus,bird,72.7,NA,70.9,NA,NA,partial.length,wing length (mm),0.025,-0.011,2,NA,biparental
-199,Sialia mexicana,bird,25.8,1.1,27.1,1.3,SD,mass,body mass (g),-0.048,0.021,2,monogamy,cooperative
-200,Sialia sialis,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,cooperative
-201,Sitophilus zeamais,invertebrate,0.00305,0.00003,0.00316,0.00003,SE,mass,body mass (g),-0.035,0.015,2,multiple mating,none
-202,Sitta europaea,bird,90,1.3,87,1.5,SD,partial.length,wing length (mm),0.034,-0.015,2,monogamy,biparental
-203,Spheniscus demersus,bird,3310,260,2960,310,SD,mass,body mass (g),0.118,-0.049,2,monogamy,biparental
-204,Spinus spinus,bird,13.5,NA,13,NA,NA,mass,body mass (g),0.038,-0.016,2,monogamy,maternal
-205,Stagmomantis limbata,invertebrate,0.35,0.17,1.47,0.31,SD,mass,body mass (g),-0.762,0.623,2,multiple mating,maternal
-206,Steno bredanensis,mammal,1985,358.43,2165.56,259.23,SD,length,body length (mm),-0.083,0.038,2,multiple mating,maternal
-207,Stercorarius antarcticus,bird,1735,75.4,1935,130,SD,mass,body mass (g),-0.103,0.047,2,monogamy,maternal
-208,Streptopelia decaocto,bird,152,11.6,146,10.3,SD,mass,body mass (g),0.041,-0.017,2,monogamy,biparental
-209,Sturnus vulgaris,bird,87.6,4.8,84.4,4.2,SD,mass,body mass (g),0.038,-0.016,2,monogamy,biparental
-210,Sula dactylatra,bird,1484.5,23.3,1750.2,27.4,,mass,body mass (g),-0.152,0.072,2,monogamy,biparental
-211,Sus scrofa,mammal,90000,NA,51700,NA,NA,mass,body mass (g),0.741,-0.241,2,multiple mating,maternal
-212,Sylvia atricapilla,bird,6.09,0.027,6.135,0.036,SE,partial.length,bill width (mm),-0.007,0.003,2,monogamy,biparental
-213,Sylvia communis,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-214,Sylvia conspicillata,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-215,Sylvia melanocephala,bird,10.33,1.825,10.964,1.67,SD,mass,body mass (g),-0.058,0.026,2,monogamy,biparental
-216,Tachymarptis melba,bird,NA,NA,NA,NA,NA,NA,NA,,,0,multiple mating,biparental
-217,Tadarida teniotis,mammal,33.15,6.64,34.83,4.9,SD,mass,body mass (g),-0.048,0.021,2,multiple mating,biparental
-218,Tadorna tadorna,bird,1261,NA,1043,NA,NA,mass,body mass (g),0.209,-0.082,2,monogamy,biparental
-219,Taeniopygia guttata,bird,11.9,0.44,12.6,0.39,SE,mass,body mass (g),-0.056,0.025,2,monogamy,biparental
-220,Tamias sibiricus,mammal,150.18,7.13,149.86,8.88,SD,length,body length (mm),0.002,-0.001,2,multiple mating,maternal
-221,Tamias striatus,mammal,146.65,7.87,147.62,10.18,SD,length,body length (mm),-0.007,0.003,2,multiple mating,maternal
-222,Tenebrio molitor,invertebrate,0.1162,0.007219,0.110747,0.004733,SE,mass,body mass (g),0.049,-0.021,2,multiple mating,none
-223,Terrapene carolina,reptilia,492.577,4.41,490.888,6.92,SE,mass,body mass (g),0.003,-0.001,2,multiple mating,none
-224,Thamnophis sirtalis,reptilia,438,7,542,5,SE,length,snout-ventral length (mm),-0.192,0.093,2,multiple mating,maternal
-225,Thermosphaeroma thermophilum,invertebrate,0.615,0.01,0.374,0.004,SE,length,dorsal length (mm),0.644,-0.216,2,multiple mating,maternal
-226,Theropithecus gelada,mammal,26100,NA,13950,NA,NA,mass,body mass (g),0.871,-0.272,2,multiple mating,cooperative
-227,Tribolium castaneum,invertebrate,0.0009,0.00012,0.00097,0.00014,SD,mass,body mass (g),-0.072,0.033,2,multiple mating,none
-228,Tribolium confusum,invertebrate,0.00269,0.00036,0.00322,0.00033,SE,mass,body mass (g),-0.165,0.078,2,multiple mating,none
-229,Turdoides bicolor,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,cooperative
-230,Turdus merula,bird,127.22,3.09,123.8,2.99,SD,partial.length,wing length (mm),0.028,-0.012,2,monogamy,biparental
-231,Tursiops aduncus,mammal,2295,150,2286,87.5,SD,length,body length (mm),0.004,-0.002,2,multiple mating,maternal
-232,Tursiops truncatus,mammal,2656,85,2497,69,SD,length,body length (mm),0.064,-0.027,2,multiple mating,maternal
-233,Upupa epops,bird,74,NA,66,NA,NA,mass,body mass (g),0.121,-0.05,2,monogamy,biparental
-234,Vanellus miles,bird,NA,NA,NA,NA,NA,NA,NA,,,0,monogamy,biparental
-235,Vanellus vanellus,bird,211,17.9,226,21.8,SD,mass,body mass (g),-0.066,0.03,2,monogamy,biparental
-236,Xiphophorus birchmanni,fish,37.29,2.91,34.08,2.89,SD,length,standard length (mm),0.094,-0.039,2,multiple mating,maternal
-237,Zygiella x-notata,invertebrate,0.026,0.006,0.038,0.012,SD,mass,body mass (g),-0.316,0.165,2,multiple mating,maternal
+species_no,species_name,taxo_group,m_BS,m_SE,f_BS,f_SE,error type,measure,measurement,SSD_index,data_available,mating_system_old,mating_system,parental_care
+1,Abax parallelepipedus,invertebrate,0.234,0.014,0.251,0.007,,mass,body mass (g),-0.068,2,NA,NA,none
+2,Acanthis flammea,bird,78.1,0.03,77.1,0.03,SE,partial.length,wing length (mm),0.013,2,monogamous,monogamy,biparental
+3,Acheta domesticus,invertebrate,2.94,0.031,2.941,0.033,SE,partial.length,pronotum length (mm),0,2,promiscuous,multiple mating,none
+4,Aethopyga christinae,bird,100,NA,85,NA,NA,length,body length (mm),0.176,2,NA,NA,NA
+5,Agelenopsis pennsylvanica,invertebrate,10.23,NA,11.675,NA,NA,length,body length (mm),-0.124,1,polyandrous,multiple mating,maternal
+6,Ailuropoda melanoleuca,mammal,112750,4250,76670,1247,SE,mass,body mass (g),0.471,2,polygynous,multiple mating,maternal
+7,Alectoris rufa,bird,165,,157,,NA,partial.length,wing length (mm),0.051,2,monogamous,monogamy,biparental
+8,Amandava amandava,bird,8.5,0.5,NA,NA,NA,mass,body mass (g),,1,monogamous,monogamy,biparental
+9,Amatitlania nigrofasciata,fish,79.73,1.57,42.95,1.65,SE,length,standard length (mm),0.856,2,monogamous,monogamy,biparental
+10,Amphibolurus muricatus,reptilia,91.7,1.2,90.5,1,SE,length,snout-ventral length (mm),0.013,2,polygynous,multiple mating,maternal
+11,Amphilophus citrinellus,fish,148.02,13.3,116.97,10.98,SD,length,standard length (mm),0.265,2,monogamous,monogamy,biparental
+12,Anas castanea,bird,660,65,590,138,SD,mass,body mass (g),0.119,2,monogamous,monogamy,biparental
+13,Anas crecca,bird,320,NA,291,NA,NA,mass,body mass (g),0.1,2,monogamous,monogamy,maternal
+14,Anas platyrhynchos,bird,1246,108,1095,106,SD,mass,body mass (g),0.138,2,monogamous,monogamy,biparental
+15,Anas rhynchotis,bird,637,46.9,614,46.2,SD,mass,body mass (g),0.037,2,polygynous,multiple mating,maternal
+16,Anelosimus studiosus,invertebrate,0.002314,0.000439,0.002597,0.000521,SD,mass,body mass (g),-0.109,2,polyandrous,multiple mating,maternal
+17,Anser anser,bird,3509,321,3108,274,SD,mass,body mass (g),0.129,2,monogamous,monogamy,maternal
+18,Aphanius fasciatus,fish,43.52,7.19,43.28,4.47,SD,length,standard length (mm),0.006,2,polygynous,multiple mating,none
+19,Aphanius iberus,fish,19.4,NA,21.2,NA,NA,length,standard length (mm),-0.085,2,polygynous,multiple mating,none
+20,Aquarius remigis,invertebrate,14.48,0.61,15.66,0.6,SD,length,body length (mm),-0.075,2,promiscuous,multiple mating,none
+21,Archocentrus nigrofasciatus,fish,68.5,NA,45,NA,NA,length,body length (mm),0.522,2,monogamous,monogamy,biparental
+22,Asellus aquaticus,invertebrate,10.2,0.424,7.55,0.071,SD,length,body length (mm),0.351,2,polyandrous,multiple mating,maternal
+23,Ateles geoffroyi,mammal,7780,NA,7290,NA,NA,mass,body mass (g),0.067,2,promiscuous,multiple mating,maternal
+24,Ateles hybridus,mammal,NA,NA,NA,NA,NA,NA,NA,,0,promiscuous,multiple mating,maternal
+25,Athene cunicularia,bird,146,11.7,156,20,SD,mass,body mass (g),-0.064,2,monogamous,monogamy,biparental
+26,Aythya australis,bird,902,NA,838,NA,NA,mass,body mass (g),0.076,2,monogamous,monogamy,maternal
+27,Aythya fuligula,bird,723,NA,680,NA,NA,mass,body mass (g),0.063,2,monogamous,monogamy,maternal
+28,Bathynomus giganteus,invertebrate,386.8,342.2,265,60.8,SD,mass,body mass (g),0.46,2,polygynous,multiple mating,maternal
+29,Betta splendens,fish,39.2,0.624,36.1,0.557,SD,length,body length (mm),0.086,2,monogamous,monogamy,paternal
+30,Biziura lobata,bird,874.5,41.5,723.8,26.9,SD,partial.length,wing length (mm),0.208,2,polygynous,multiple mating,maternal
+31,Booralana tricarinata,invertebrate,4.6,1.8,4.6,1.2,SD,mass,body mass (g),0,2,NA,NA,NA
+32,Brachyrhaphis episcopi,fish,27.8,1.3,35.1,0.8,SE,length,standard length (mm),-0.208,2,promiscuous,multiple mating,none
+33,Brachyrhaphis rhabdophora,fish,29.2,4.7,34.5,6.5,SD,length,standard length (mm),-0.154,2,promiscuous,multiple mating,none
+34,Bubo bubo,bird,93.8,4.5,102.5,6.58,SD,partial.length,tarsus length (mm),-0.085,2,monogamous,monogamy,biparental
+35,Bucanetes githagineus,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+36,Bucephala clangula,bird,1120,13,711,14.1,SD,mass,body mass (g),0.575,2,monogamous,monogamy,biparental
+37,Callithrix geoffroyi,mammal,290,NA,190,NA,NA,mass,body mass (g),0.526,2,monogamous,monogamy,biparental
+38,Callosobruchus chinensis,invertebrate,0.00349,0.00071,0.00434,0.00087,SD,mass,body mass (g),-0.196,2,polyandrous,multiple mating,biparental
+39,Callosobruchus maculatus,invertebrate,0.00387,0.00084,0.00467,0.00095,SD,mass,body mass (g),-0.171,2,promiscuous,multiple mating,none
+40,Canis latrans,mammal,1140,200,960,100,SE,mass,body mass (g),0.188,2,monogamous,monogamy,biparental
+41,Capreolus capreolus,mammal,27680,NA,26730,NA,NA,mass,body mass (g),0.036,2,polygynous,multiple mating,maternal
+42,Carabus nemoralis,invertebrate,14.15,NA,14.98,NA,NA,partial.length,elytron length (mm),-0.055,2,polygynous,multiple mating,maternal
+43,Carcinus maenas,invertebrate,44.54,1.77,47.21,1.01,SE,partial.length,carapace width (mm),-0.057,2,polygynous,multiple mating,maternal
+44,Carduelis cannabina,bird,20.2,NA,18.9,NA,NA,mass,body mass (g),0.069,2,monogamous,monogamy,maternal
+45,Carduelis carduelis,bird,75.5,,73.3,,SE,partial.length,wing length (mm),0.03,2,polygynous,multiple mating,biparental
+46,Carduelis chloris,bird,91.7,1.8,87.1,1.9,SD,partial.length,wing length (mm),0.053,2,monogamous,monogamy,biparental
+47,Carpodacus erythrinus,bird,25,NA,23,NA,NA,mass,body mass (g),0.087,2,monogamous,monogamy,maternal
+48,Cavia aperea,mammal,678,91,593,30,SD,mass,body mass (g),0.143,2,polygynous,multiple mating,maternal
+49,Cereopsis novaehollandiae,bird,4135,NA,3180,NA,NA,mass,body mass (g),0.3,2,monogamous,monogamy,biparental
+50,Cettia cetti,bird,15.2,1,11.5,0.8,SD,mass,body mass (g),0.322,2,polygynous,multiple mating,biparental
+51,Charadrius hiaticula,bird,63.3,NA,64.8,NA,NA,mass,body mass (g),-0.023,2,monogamous,monogamy,cooperative
+52,Charadrius ruficapilus,bird,105.1,3.19,104,2.48,SD,partial.length,wing length (mm),0.011,2,monogamous,monogamy,biparental
+53,Chenonetta jubata,bird,815,NA,800,NA,NA,mass,body mass (g),0.019,2,monogamous,monogamy,none
+54,Cherax destructor,invertebrate,109.87,6.8,112.21,5.9,SE,length,body length (mm),-0.021,2,polygynous,multiple mating,maternal
+55,Chlamydotis undulata,bird,1960,NA,1150,NA,NA,mass,body mass (g),0.704,2,polygynous,multiple mating,maternal
+56,Chlorocebus pygerythrus,mammal,413,NA,257,NA,NA,mass,body mass (g),0.607,2,promiscuous,multiple mating,biparental
+57,Columba palumbus,bird,250.93,7.2,248.25,6.5,SD,partial.length,wing length (mm),0.011,0,monogamous,monogamy,biparental
+58,Copsychus saularis,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+59,Corcorax melanorhamphos,bird,381.54,29.28,372.89,37.32,SD,mass,body mass (g),0.023,2,monogamous,monogamy,cooperative
+60,Coturnix japonica,bird,106.8,26.6,134.3,14.3,NA,mass,body mass (g),-0.205,2,polygynous,multiple mating,biparental
+61,Crocuta crocuta,mammal,48700,NA,55600,NA,NA,mass,body mass (g),-0.124,2,polygynous,multiple mating,maternal
+62,Cyanistes caeruleus,bird,19.25,NA,18.1,NA,NA,mass,body mass (g),0.064,2,monogamous,monogamy,biparental
+63,Cyanocitta stelleri,bird,138.1,1.1,134,0.5,SE,partial.length,wing length (mm),0.031,2,monogamous,monogamy,biparental
+64,Cygnus atratus,bird,6990,880,5330,750,SD,mass,body mass (g),0.311,2,monogamous,monogamy,biparental
+65,Cyprinus carpio,fish,283,7.9,282.86,6.06,SE,length,body length (mm),0,2,promiscuous,multiple mating,none
+66,Danio rerio,fish,27.58,0.96,30.19,1.41,SD,length,standard length (mm),-0.086,2,promiscuous,multiple mating,none
+67,Dendrocopos major,bird,76,NA,72.7,NA,NA,mass,body mass (g),0.045,2,monogamous,monogamy,biparental
+68,Diomedea exulans,bird,9440,590,7840,620,SD,mass,body mass (g),0.204,2,monogamous,monogamy,biparental
+69,Diploptera punctata,invertebrate,0.704,0.013,0.811,0.008,SE,partial.length,pronotum width (mm),-0.132,2,promiscuous,multiple mating,maternal
+70,Drosophila kurseongensis,invertebrate,NA,NA,NA,NA,NA,NA,NA,,0,NA,NA,none
+71,Drosophila melanogaster,invertebrate,0.00076,0.000005,0.00124,0.000008,SE,mass,body mass (g),-0.387,2,promiscuous,multiple mating,none
+72,Drosophila prolongata,invertebrate,1.69,NA,1.45,NA,NA,partial.length,thorax length (mm),0.166,2,NA,NA,none
+73,Elaphe obsoleta,reptilia,196,0.1,175,0.1,SE,partial.length,tail length (mm),0.12,2,polyandrous,multiple mating,maternal
+74,Emberiza cia,bird,24.2,1.6,22.7,1.6,SD,mass,body mass (g),0.066,2,monogamous,monogamy,biparental
+75,Emberiza citrinella,bird,85.3,2.2,NA,NA,SD,partial.length,wing length (mm),,1,monogamous,monogamy,biparental
+76,Emberiza schoeniclus,bird,20,0.45,19.6,0.6,SE,mass,body mass (g),0.02,2,monogamous,monogamy,biparental
+77,Ensatina eschscholtzii,reptilia,101.7,NA,96.9,NA,NA,length,total length (mm),0.05,2,NA,NA,maternal
+78,Eospalax smithii,mammal,NA,NA,NA,NA,NA,NA,NA,,0,NA,NA,maternal
+79,Epthianura albifrons,bird,70.3,0.1,69.3,0.2,SE,partial.length,wing length (mm),0.014,2,monogamous,monogamy,biparental
+80,Eriocheir sinensis,invertebrate,6.95,0.14,6.81,0.18,SE,partial.length,carapace width (mm),0.021,2,monogamous,monogamy,maternal
+81,Eris militaris,invertebrate,0.023285,0.000925,0.024013,0.001876,SE,mass,body mass (g),-0.03,2,polygynous,multiple mating,maternal
+82,Euprymna tasmanica,invertebrate,22.575,0.978,22.375,2.872,SD,length,body size (mm),0.009,2,promiscuous,multiple mating,none
+83,Falco tinnunculus,bird,180,13,224,17,SD,mass,body mass (g),-0.196,2,monogamous,monogamy,biparental
+84,Ficedula hypoleuca,bird,12.2,0.5,15.6,0.9,SD,mass,body mass (g),-0.218,2,monogamous,monogamy,biparental
+85,Fringilla coelebs,bird,21.9,1.7,20.9,1.5,SD,mass,body mass (g),0.048,2,monogamous,monogamy,maternal
+86,Galerida cristata,bird,39,NA,41.9,NA,NA,mass,body mass (g),-0.069,2,monogamous,monogamy,biparental
+87,Gallus gallus,bird,1008.2,8.74,705,5.36,SE,mass,body mass (g),0.43,2,polygynous,multiple mating,maternal
+88,Gambusia affinis,fish,23.476,0.466,29.854,0.756,SE,length,standard length (mm),-0.214,2,promiscuous,multiple mating,maternal
+89,Gambusia holbrooki,fish,24.6,2.5,34.1,4.9,SD,length,total length (mm),-0.279,2,promiscuous,multiple mating,maternal
+90,Gambusia hubbsi,fish,22.8,0.4,26.5,0.7,SE,length,standard length (mm),-0.14,2,promiscuous,multiple mating,maternal
+91,Gammarus fossarum,invertebrate,19.5,0.7,17.8,0.5,,length,total body length (mm),0.096,2,promiscuous,multiple mating,maternal
+92,Gasterosteus aculeatus,fish,57.06,1.81,60.95,3.31,SD,length,standard length (mm),-0.064,2,polygynous,multiple mating,paternal
+93,Gerris gracilicornis,invertebrate,12.24,0.41,14.44,0.47,,length,total body length (mm),-0.152,2,promiscuous,multiple mating,none
+94,Grallina cyanoleuca,bird,91.6,12.1,81.3,7.4,SD,mass,body mass (g),0.127,2,monogamous,monogamy,biparental
+95,Gryllus bimaculatus,invertebrate,7.35,0.07,7.49,0.09,SE,partial.length,pronotum width (mm),-0.019,2,promiscuous,multiple mating,none
+96,Gymnorhina tibicen,bird,NA,NA,NA,NA,NA,NA,NA,,0,polyandrous,multiple mating,biparental
+97,Heterodontus portusjacksoni,fish,950.67,24.01,1108.8,149.42,SD,length,total body length (mm),-0.143,2,polygynous,multiple mating,none
+98,Heterozius rotundifrons,invertebrate,17.3,0.36,16,0.42,SE,partial.length,carapace width (mm),0.081,2,promiscuous,multiple mating,maternal
+99,Himantopus himantopus,bird,119,NA,117.5,NA,NA,partial.length,tarsus length (mm),0.013,2,monogamous,monogamy,biparental
+100,Hirundo rustica,bird,125,0.52,121.74,0.7,SE,partial.length,wing length (mm),0.027,2,monogamous,monogamy,biparental
+101,Homarus gammarus,invertebrate,89.825,5.441,86.5,3.652,SD,partial.length,carapace length (mm),0.038,2,monogamous,monogamy,biparental
+102,Hypsophrys nicaraguensis,fish,41.6,0.5,36.6,0.4,,length,total length (mm),0.137,2,NA,NA,biparental
+103,Ictidomys tridecemlineatus,mammal,153,20.1,139,36.1,,mass,body mass (g),0.101,2,polygynous,multiple mating,maternal
+104,Ischnura elegans,invertebrate,23.98,0.469,25.353,0.505,SE,mass,body mass (g),-0.054,2,promiscuous,multiple mating,none
+105,Ischnura genei,invertebrate,17.632,0.366,20.323,0.251,SE,mass,body mass (g),-0.132,2,promiscuous,multiple mating,none
+106,Ischnura graellsii,invertebrate,16.64,0.227,18.604,0.275,SE,mass,body mass (g),-0.106,2,promiscuous,multiple mating,none
+107,Ischnura pumillio,invertebrate,16.412,0.719,17.777,0.674,SE,mass,body mass (g),-0.077,2,promiscuous,multiple mating,none
+108,Lampropholis delicata,reptilia,34.95,0.43,35.61,1.78,SE,length,snout-ventral length (mm),-0.019,2,NA,NA,none
+109,Lanius collurio,bird,94.71,1.93,94.03,1.98,,partial.length,wing length (mm),0.007,2,monogamous,monogamy,biparental
+110,Larinioides sclopetarius,invertebrate,0.038,0.00084,0.06,0.00142,SE,mass,body mass (g),-0.367,2,polyandrous,multiple mating,maternal
+111,Lasiopodomys mandarinus,mammal,101.5,NA,110.8,NA,NA,length,body length (mm),-0.084,2,polygynous,multiple mating,biparental
+112,Leucocarbo verrucosus,bird,2400,200,2100,200,SD,mass,body mass (g),0.143,2,monogamous,monogamy,biparental
+113,Liolaemus nitidus,reptilia,82.71,3.67,74.24,2.5,SE,length,snout-ventral length (mm),0.114,2,NA,NA,NA
+114,Lissotriton boscai,reptilia,1.11,0.02,1.49,0.03,SE,mass,body mass (g),-0.255,2,polygynous,multiple mating,NA
+115,Lullula arborea,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+116,Macaca arctoides,mammal,17787,NA,12100,NA,NA,mass,body mass (g),0.47,2,promiscuous,multiple mating,biparental
+117,Macaca assamensis,mammal,11300,NA,6900,NA,NA,mass,body mass (g),0.638,2,promiscuous,multiple mating,biparental
+118,Macropus agilis,mammal,20700,1900,10200,300,SE,mass,body mass (g),1.029,2,polygynous,multiple mating,maternal
+119,Macropus giganteus,mammal,66000,NA,32000,NA,NA,mass,body mass (g),1.063,2,polygynous,multiple mating,maternal
+120,Malurus cyaneus,bird,11.3,0.8,10.5,0.8,SD,mass,body mass (g),0.076,2,monogamous,monogamy,cooperative
+121,Mantis religiosa,invertebrate,0.48,0.19,1.88,0.36,SD,mass,body mass (g),-0.745,2,promiscuous,multiple mating,maternal
+122,Megadyptes antipodes,bird,5530,340,5130,320,SD,mass,body mass (g),0.078,2,monogamous,monogamy,biparental
+123,Melopsittacus undulatus,bird,29.2,1.9,28.8,2.1,SD,mass,body mass (g),0.014,2,monogamous,monogamy,biparental
+124,Microcebus murinus,mammal,90.2,2.8,109,3.8,SE,mass,body mass (g),-0.172,2,promiscuous,multiple mating,maternal
+125,Micromys minutus,mammal,63.3,NA,75.2,NA,NA,length,body length (mm),-0.158,2,NA,NA,maternal
+126,Microtus arvalis,mammal,35.7,7.2,30.4,4.1,SE,mass,body mass (g),0.174,2,promiscuous,multiple mating,biparental
+127,Microtus guentheri,mammal,44.7,6.7,43.3,8.3,SE,mass,body mass (g),0.032,2,NA,NA,biparental
+128,Microtus ochrogaster,mammal,41.6,6.5,41.7,6.4,,mass,body mass (g),-0.002,2,monogamous,monogamy,biparental
+129,Miliaria calandra,bird,53.6,4.1,43.9,3.1,SD,mass,body mass (g),0.221,2,monogamous,monogamy,maternal
+130,Molothrus ater,bird,49.62,4.07,39.14,2.8,,mass,body mass (g),0.268,2,monogamous,monogamy,none
+131,Motacilla alba,bird,22.3,NA,19.75,NA,NA,mass,body mass (g),0.129,2,monogamous,monogamy,biparental
+132,Motacilla cinerea,bird,18,1.4,17.2,1.4,SD,mass,body mass (g),0.047,2,monogamous,monogamy,biparental
+133,Motacilla flava,bird,19.35,NA,16.9,NA,NA,mass,body mass (g),0.145,2,monogamous,monogamy,biparental
+134,Mus musculus,mammal,35.52,1.63,26.57,0.39,SE,mass,body mass (g),0.337,2,polygynous,multiple mating,maternal
+135,Mus spicilegus,mammal,11.38,0.21,10.7,0.18,SE,mass,body mass (g),0.064,2,monogamous,monogamy,cooperative
+136,Mustela lutreola,mammal,976.6,21.3,667,58.8,SE,mass,body mass (g),0.464,2,polygynous,multiple mating,maternal
+137,Nannospalax ehrenbergi,mammal,175.6,4.23,137,1.92,SE,mass,body mass (g),0.282,2,monogamous,monogamy,maternal
+138,Nebria brevicollis,invertebrate,0.067237,0.001343,0.074077,0.00253,SE,mass,body mass (g),-0.092,2,NA,NA,maternal
+139,Neochmia phaeton,bird,10,0.09,9.65,0.09,SE,mass,body mass (g),0.036,2,monogamous,monogamy,biparental
+140,Neogobius melanostomus,fish,63,33,69,29,SD,length,body length (mm),-0.087,2,polygynous,multiple mating,paternal
+141,Neolamprologus caudopunctatus,fish,57.7,3.8,53.7,10,,length,standard length (mm),0.074,2,monogamous,monogamy,biparental
+142,Neolamprologus pulcher,fish,62,0.6,NA,NA,SE,length,standard length (mm),,1,NA,NA,cooperative
+143,Neovison vison,mammal,1310.2,38.9,780.7,21,SE,mass,body mass (g),0.678,2,promiscuous,multiple mating,maternal
+144,Nothobranchius furzeri,fish,40,2.7,33,2.5,SD,length,total length (mm),0.212,2,promiscuous,multiple mating,none
+145,Nuctenea umbratica,invertebrate,0.067,0.021,0.107,0.03,SD,mass,body mass (g),-0.374,2,monogamous,monogamy,maternal
+146,Oenanthe oenanthe,bird,24,1.5,22.3,2.5,SD,mass,body mass (g),0.076,2,monogamous,monogamy,biparental
+147,Orconectes limosus,invertebrate,69.89,NA,62.26,NA,NA,length,total body length (mm),0.123,2,polyandrous,multiple mating,maternal
+148,Oreochromis niloticus,fish,173,30.1,162,28.7,SD,length,standard length (mm),0.068,2,polygynous,multiple mating,maternal
+149,Oxyura australis,bird,787.5,NA,888,NA,NA,mass,body mass (g),-0.113,2,polygynous,multiple mating,maternal
+150,Palaemon elegans,invertebrate,29.4,NA,38.34,NA,NA,length,body length (mm),-0.233,2,promiscuous,multiple mating,none
+151,Pan troglodytes,mammal,301,15.5,292,15.2,SD,partial.length,femur length (mm),0.031,2,promiscuous,multiple mating,maternal
+152,Panopeus herbstii,invertebrate,24.33,1.983,23.986,2.296,SD,mass,body mass (g),0.014,2,promiscuous,multiple mating,none
+153,Pararge aegeria,invertebrate,0.0592,0.0011,0.0889,0.002,SE,mass,body mass (g),-0.334,2,promiscuous,multiple mating,none
+154,Parus major,bird,20.01,0.09,19.43,0.1,SE,partial.length,tarsus length (mm),0.03,2,monogamous,monogamy,biparental
+155,Passer domesticus,bird,31.9,1.78,32.85,2.34,SD,mass,body mass (g),-0.029,2,monogamous,monogamy,biparental
+156,Passer hispaniolensis,bird,28.7,1.91,,,SD,mass,body mass (g),,0,monogamous,monogamy,biparental
+157,Passer montanus,bird,53.969,3.281,52.58,3.104,SD,partial.length,wing length (mm),0.026,2,monogamous,monogamy,biparental
+158,Pelvicachromis pulcher,fish,46,1,38,1,SE,length,standard length (mm),0.211,2,monogamous,monogamy,biparental
+159,Perdix perdix,bird,399.1,25.1,390,37.8,SD,mass,body mass (g),0.023,2,monogamous,monogamy,maternal
+160,Pericrocotus flammeus,bird,90.5,,86.5,,NA,partial.length,wing length (mm),0.046,0,polyandrous,multiple mating,maternal
+161,Pericrocotus solaris,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+162,Peromyscus californicus,mammal,44.36,2.1,44.39,1.56,,mass,body mass (g),-0.001,2,monogamous,monogamy,biparental
+163,Peromyscus maniculatus,mammal,17.04,0.24,16.76,0.33,,mass,body mass (g),0.017,2,polygynous,multiple mating,maternal
+164,Petroica boodang,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+165,Petroica phoenicea,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+166,Phaedon cochleariae,invertebrate,0.00704,0.00086,0.00931,0.00088,SD,mass,body mass (g),-0.244,2,promiscuous,multiple mating,none
+167,Phasianus colchicus,bird,1317,NA,953,NA,NA,mass,body mass (g),0.382,2,polygynous,multiple mating,maternal
+168,Phodopus sungorus,mammal,89.3,NA,82.3,NA,NA,length,body length (mm),0.085,2,promiscuous,multiple mating,maternal
+169,Phoenicopterus chilensis,bird,2700,NA,2310,NA,NA,mass,body mass (g),0.169,2,monogamous,monogamy,biparental
+170,Phoenicopterus roseus,bird,3540,NA,2530,NA,NA,mass,body mass (g),0.399,2,monogamous,monogamy,biparental
+171,Phoenicurus ochruros,bird,84.5,,,,,partial.length,wing length (mm),,1,monogamous,monogamy,cooperative
+172,Phoenicurus phoenicurus,bird,14.7,1.4,14.5,1.4,SD,mass,body mass (g),0.014,2,monogamous,monogamy,biparental
+173,Phylloscopus collybita,bird,61.95,NA,56.57,NA,NA,partial.length,wing length (mm),0.095,2,monogamous,monogamy,maternal
+174,Pica pica,bird,221,NA,191,NA,NA,mass,body mass (g),0.157,2,monogamous,monogamy,biparental
+175,Picus viridis,bird,NA,NA,215,NA,NA,mass,body mass (g),,1,monogamous,monogamy,biparental
+176,Plecturocebus moloch,mammal,1020,NA,956,NA,NA,mass,body mass (g),0.067,2,monogamous,monogamy,maternal
+177,Plethodon cinereus,reptilia,41.65,0.69,40.73,0.82,SE,length,snout-ventral length (mm),0.023,2,monogamous,monogamy,maternal
+178,Poecile palustris,bird,11.78,0.35,10.98,0.57,SD,mass,body mass (g),0.073,2,monogamous,monogamy,biparental
+179,Poecilia reticulata,fish,20.06,0.23,26.34,0.28,SE,length,standard length (mm),-0.238,2,polyandrous,multiple mating,maternal
+180,Procambarus clarkii,invertebrate,48.7,NA,46.7,NA,NA,partial.length,carapace length (mm),0.043,2,promiscuous,multiple mating,maternal
+181,Prunella modularis,bird,71.1,1.3,NA,NA,SD,partial.length,wing length (mm),,1,monogamous,monogamy,biparental
+182,Psephotus haematonotus,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+183,Pteromys volans,mammal,144,NA,155,NA,NA,mass,body mass (g),-0.071,2,promiscuous,multiple mating,maternal
+184,Pterostichus oblongopunctatus,invertebrate,0.0514,NA,0.06,NA,NA,mass,body mass (g),-0.143,2,NA,NA,none
+185,Puma concolor,mammal,42300,1900,26700,1700,SE,mass,body mass (g),0.584,2,polygynous,multiple mating,maternal
+186,Pycnonotus jocosus,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+187,Pycnonotus sinensis,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+188,Pyrrhula pyrrhula,bird,93.65,1.54,92.5,2.1,SD,partial.length,wing length (mm),0.012,2,monogamous,monogamy,biparental
+189,Rattus norvegicus,mammal,334.5,NA,230.5,NA,NA,mass,body mass (g),0.451,2,promiscuous,multiple mating,maternal
+190,Regulus regulus,bird,5.6,0.4,5.5,0.4,SD,mass,body mass (g),0.018,2,monogamous,monogamy,biparental
+191,Rhabdomys dilectus,mammal,7.04,NA,9.31,NA,NA,mass,body mass (g),-0.244,2,NA,NA,biparental
+192,Rhabdomys pumilio,mammal,45.7,7.7,43,7.6,,mass,body mass (g),0.063,2,polyandrous,multiple mating,biparental
+193,Rhinella marina,reptilia,103.388,3.853,137.426,9.177,SE,mass,body mass (g),-0.248,2,promiscuous,multiple mating,none
+194,Saguinus oedipus,mammal,451.4,62.1,473,57.3,SD,mass,body mass (g),-0.046,2,monogamous,monogamy,cooperative
+195,Saxicola rubetra,bird,75.8,NA,73.4,NA,NA,partial.length,wing length (mm),0.033,2,monogamous,monogamy,biparental
+196,Saxicola torquata,bird,68.62,1.5,66.33,1.78,SD,partial.length,wing length (mm),0.035,2,monogamous,monogamy,biparental
+197,Sciurus vulgaris,mammal,305,25,316,31,SD,mass,body mass (g),-0.035,2,polygynous,multiple mating,maternal
+198,Serinus serinus,bird,72.7,NA,70.9,NA,NA,partial.length,wing length (mm),0.025,2,NA,NA,biparental
+199,Sialia mexicana,bird,25.8,1.1,27.1,1.3,SD,mass,body mass (g),-0.048,2,monogamous,monogamy,cooperative
+200,Sialia sialis,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,cooperative
+201,Sitophilus zeamais,invertebrate,0.00305,0.00003,0.00316,0.00003,SE,mass,body mass (g),-0.035,2,polyandrous,multiple mating,none
+202,Sitta europaea,bird,90,1.3,87,1.5,SD,partial.length,wing length (mm),0.034,2,monogamous,monogamy,biparental
+203,Spheniscus demersus,bird,3310,260,2960,310,SD,mass,body mass (g),0.118,2,monogamous,monogamy,biparental
+204,Spinus spinus,bird,13.5,NA,13,NA,NA,mass,body mass (g),0.038,2,monogamous,monogamy,maternal
+205,Stagmomantis limbata,invertebrate,0.35,0.17,1.47,0.31,SD,mass,body mass (g),-0.762,2,polyandrous,multiple mating,maternal
+206,Steno bredanensis,mammal,1985,358.43,2165.56,259.23,SD,length,body length (mm),-0.083,2,promiscuous,multiple mating,maternal
+207,Stercorarius antarcticus,bird,1735,75.4,1935,130,SD,mass,body mass (g),-0.103,2,monogamous,monogamy,maternal
+208,Streptopelia decaocto,bird,152,11.6,146,10.3,SD,mass,body mass (g),0.041,2,monogamous,monogamy,biparental
+209,Sturnus vulgaris,bird,87.6,4.8,84.4,4.2,SD,mass,body mass (g),0.038,2,monogamous,monogamy,biparental
+210,Sula dactylatra,bird,1484.5,23.3,1750.2,27.4,,mass,body mass (g),-0.152,2,monogamous,monogamy,biparental
+211,Sus scrofa,mammal,90000,NA,51700,NA,NA,mass,body mass (g),0.741,2,promiscuous,multiple mating,maternal
+212,Sylvia atricapilla,bird,6.09,0.027,6.135,0.036,SE,partial.length,bill width (mm),-0.007,2,monogamous,monogamy,biparental
+213,Sylvia communis,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+214,Sylvia conspicillata,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+215,Sylvia melanocephala,bird,10.33,1.825,10.964,1.67,SD,mass,body mass (g),-0.058,2,monogamous,monogamy,biparental
+216,Tachymarptis melba,bird,NA,NA,NA,NA,NA,NA,NA,,0,polygynous,multiple mating,biparental
+217,Tadarida teniotis,mammal,33.15,6.64,34.83,4.9,SD,mass,body mass (g),-0.048,2,polygynous,multiple mating,biparental
+218,Tadorna tadorna,bird,1261,NA,1043,NA,NA,mass,body mass (g),0.209,2,monogamous,monogamy,biparental
+219,Taeniopygia guttata,bird,11.9,0.44,12.6,0.39,SE,mass,body mass (g),-0.056,2,monogamous,monogamy,biparental
+220,Tamias sibiricus,mammal,150.18,7.13,149.86,8.88,SD,length,body length (mm),0.002,2,promiscuous,multiple mating,maternal
+221,Tamias striatus,mammal,146.65,7.87,147.62,10.18,SD,length,body length (mm),-0.007,2,polygynous,multiple mating,maternal
+222,Tenebrio molitor,invertebrate,0.1162,0.007219,0.110747,0.004733,SE,mass,body mass (g),0.049,2,polyandrous,multiple mating,none
+223,Terrapene carolina,reptilia,492.577,4.41,490.888,6.92,SE,mass,body mass (g),0.003,2,promiscuous,multiple mating,none
+224,Thamnophis sirtalis,reptilia,438,7,542,5,SE,length,snout-ventral length (mm),-0.192,2,promiscuous,multiple mating,maternal
+225,Thermosphaeroma thermophilum,invertebrate,0.615,0.01,0.374,0.004,SE,length,dorsal length (mm),0.644,2,polygynous,multiple mating,maternal
+226,Theropithecus gelada,mammal,26100,NA,13950,NA,NA,mass,body mass (g),0.871,2,polygynous,multiple mating,cooperative
+227,Tribolium castaneum,invertebrate,0.0009,0.00012,0.00097,0.00014,SD,mass,body mass (g),-0.072,2,promiscuous,multiple mating,none
+228,Tribolium confusum,invertebrate,0.00269,0.00036,0.00322,0.00033,SE,mass,body mass (g),-0.165,2,promiscuous,multiple mating,none
+229,Turdoides bicolor,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,cooperative
+230,Turdus merula,bird,127.22,3.09,123.8,2.99,SD,partial.length,wing length (mm),0.028,2,monogamous,monogamy,biparental
+231,Tursiops aduncus,mammal,2295,150,2286,87.5,SD,length,body length (mm),0.004,2,promiscuous,multiple mating,maternal
+232,Tursiops truncatus,mammal,2656,85,2497,69,SD,length,body length (mm),0.064,2,promiscuous,multiple mating,maternal
+233,Upupa epops,bird,74,NA,66,NA,NA,mass,body mass (g),0.121,2,monogamous,monogamy,biparental
+234,Vanellus miles,bird,NA,NA,NA,NA,NA,NA,NA,,0,monogamous,monogamy,biparental
+235,Vanellus vanellus,bird,211,17.9,226,21.8,SD,mass,body mass (g),-0.066,2,monogamous,monogamy,biparental
+236,Xiphophorus birchmanni,fish,37.29,2.91,34.08,2.89,SD,length,standard length (mm),0.094,2,promiscuous,multiple mating,maternal
+237,Zygiella x-notata,invertebrate,0.026,0.006,0.038,0.012,SD,mass,body mass (g),-0.316,2,polyandrous,multiple mating,maternal

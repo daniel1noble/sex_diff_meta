@@ -55,8 +55,10 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
                 by="species_name", all.x=TRUE,  no.dups = TRUE)
   
 # Just select the relevant columns for now to make life easier
-  pers_new <- pers %>% 
-          select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, male_n, male_mean_conv, male_sd_conv, female_n, female_mean_conv, female_sd_conv, depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, study_type, measurement_type)
+  pers_new <- pers %>% select(study_ID, year, species_name, SSD_index, taxo_group, data_type, personality_trait, 
+                              male_n, male_mean_conv, male_sd_conv, female_n, female_mean_conv, female_sd_conv, 
+                              depend, directionality, spp_name_phylo, mating_system, age, population, study_environment, 
+                              study_type, measurement_type)
 
 # Check out some outliers
 #  pers_new %>%
@@ -80,8 +82,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
                       filter(measurement_type == "proportion"))
   
   # both sexes combined in the one function now - save list to object so I can save as dataframe
-  proportion_all <- convert_propor(pers_proportion$male_mean, pers_proportion$m_SE_to_SD, 
-                                   pers_proportion$female_mean, pers_proportion$f_SE_to_SD)
+  proportion_all <- convert_propor(pers_proportion$male_mean, pers_proportion$m_SE_to_SD, pers_proportion$female_mean, pers_proportion$f_SE_to_SD)
 
   # 2. converting latency data to log-latency
   # filter dataset to show only latency data
@@ -95,7 +96,7 @@ bodysize <- read.csv("./data/bodysize_SSD.csv", stringsAsFactors = FALSE)
 
  # make table into dataframe, try merge() to merge with subset, then merge the 3?
 write.csv(proportion_all, file = "pers_proportion.csv", row.names = FALSE)  
-write.csv(latency_all, file = "pers_latency.csv", row.names = FALSE)  
+write.csv(latency_all, file = "./data/pers_latency.csv", row.names = FALSE)  
     # add in the new columns manually since I've wasted so much time trying to do it in code
 
 ```

@@ -26,27 +26,36 @@ fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
 }
 
 fit_MLMA_reg_models_pubbias <- function(data, phylo_vcv){
-  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + precisionlncvr, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + sqrt_inv_n_tilda, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
   
-  SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + precisionSMD, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + sqrt_inv_n_tilda, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
   
   return(list(SMD = SMD, 
               lnCVR = lnCVR))
 }
 
 fit_MLMA_reg_models_personality_trait_SSD_index <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+          lnCVR <- metafor::rma.mv(CVR_yi ~ personality_trait*SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ personality_trait*SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
 }
 
-fit_MLMA_reg_models_mating_system  <- function(data, phylo_vcv){
-          lnCVR <- metafor::rma.mv(CVR_yi ~ mating_system, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+fit_MLMA_reg_models_personality_trait_SSD_simple <- function(data, phylo_vcv){
+  lnCVR <- metafor::rma.mv(CVR_yi ~ SSD_index, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+  
+  SMD <- metafor::rma.mv(SMD_yi_flip ~ SSD_index, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
+  
+  return(list(SMD = SMD, 
+              lnCVR = lnCVR))
+}
 
-            SMD <- metafor::rma.mv(SMD_yi_flip ~ mating_system, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
+fit_MLMA_reg_models_mating_system  <- function(data, phylo_vcv){
+          lnCVR <- metafor::rma.mv(CVR_yi ~ mating_system, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
+
+            SMD <- metafor::rma.mv(SMD_yi_flip ~ mating_system, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data) 
 
           return(list(SMD = SMD, 
           			lnCVR = lnCVR))
@@ -161,9 +170,9 @@ meta_model_fits <- function(data, phylo_vcv, type = c("int", "pers", "pers_SSD",
 
   	if(type == "pers_SSD"){
         model_fits <- mapply(function(x,y) fit_MLMA_reg_models_personality_trait_SSD_index(x, y), x = taxa_list, y = phylo_vcv)
-    }
-
-	if(type == "pers_mate"){
+  	}
+    
+	  if(type == "pers_mate"){
         model_fits <- mapply(function(x,y) fit_MLMA_reg_models_mating_system(x, y), x = taxa_list, y = phylo_vcv)
     }    
 
@@ -239,14 +248,14 @@ fit_int_MLMAmodel_D_pers <- function(data, phylo_vcv, D){
 # D matrix personality trait x SSD models
 fit_int_MLMAmodel_D_pers_ssd <- function(data, phylo_vcv, D){
   
-  lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ -1+ personality_trait*SSD_index, V = CVR_vi, 
+  lnCVR <- mapply(function(x,y,z) metafor::rma.mv(CVR_yi ~ personality_trait*SSD_index, V = CVR_vi, 
                                                   random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                                  R = list(spp_name_phylo=y, obs = z), 
+                                                  R = list(spp_name_phylo=y, obs = z), control=list(optimizer="optim"),
                                                   data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE)
   
-  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ -1+ personality_trait*SSD_index, V = SMD_vi, 
+  SMD <- mapply(function(x,y,z) metafor::rma.mv(SMD_yi_flip ~ personality_trait*SSD_index, V = SMD_vi, 
                                                 random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), 
-                                                R = list(spp_name_phylo=y, obs = z), 
+                                                R = list(spp_name_phylo=y, obs = z), control=list(optimizer="optim"),
                                                 data = x, test = "t"), x = split_taxa, y = phylo_vcv, z = D, SIMPLIFY = FALSE) 
   
   return(list(SMD=SMD, 
@@ -310,9 +319,121 @@ tree_checks <- function(data, tree, dataCol, type = c("checks", "prune")){
           return(ave.tree)
     }
 
-
+# modified orchard function to get pred intervals from MLMR model with continuous moderator term:
+    # Get prediction intervals for a single categorical variable when controlling for continuous variables in a model.
+    get_pred_est_cont <- function (model, mod_cat, mod_cont, type = c("mean", "zero")) {
+      type = match.arg(type)
+      # Categorical moderator
+      pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+      name_cat <- row.names(model$beta)[pos]
+      name_cat <- as.character(stringr::str_replace(name_cat, {{mod_cat}}, ""))
+      name_clean <- firstup(name_cat)
+      len <- length(name_clean)
+      
+      # Continuous moderators
+      len_cont <- length(mod_cont)
+      
+      if(type == "mean"){
+        if(len_cont == 1){  	
+          means_cont <- mean(model$X[,mod_cont])
+          names(means_cont) <- mod_cont
+        }
+        if(len_cont > 1){
+          means_cont <- colMeans(model$X[,mod_cont])
+        }
+      }
+      
+      if(type == "zero"){
+        if(len_cont == 1){  	
+          means_cont <- 0
+          names(means_cont) <- mod_cont
+        }
+        if(len_cont > 1){
+          means_cont <- rep(0, len_cont)
+          names(means_cont) <- mod_cont
+        }
+      }
+      
+      # Get prediction intervals
+      newdata <- matrix(0, ncol = len+len_cont, nrow = len)
+      diag(newdata[c(1:len),c(1:len)]) <- 1
+      newdata[,c((len+1):(len+len_cont))] <- means_cont
+      
+      for(i in 1:len){
+        newdata[i,c((len+1):(len+len_cont))] <-  means_cont
+      }
+      
+      colnames(newdata) <- c(name_cat, names(means_cont))
+      
+      pred <- metafor::predict.rma(model, newmods = newdata)
+      
+      estimate <- pred$pred
+      lowerCL <- pred$ci.lb 
+      upperCL <- pred$ci.ub
+      lowerPR <- pred$cr.lb
+      upperPR <- pred$cr.ub 
+      
+      table <- tibble::tibble(name = name_clean, estimate = estimate, lowerCL = lowerCL, upperCL = upperCL, lowerPR = lowerPR, upperPR = upperPR)
+      return(table)
+    }
+    
+    #get_pred_est_cont(model, mod_cat, mod_cont)
+    
+    get_data_cont <- function(model, mod_cat){
+      
+      pos <- str_which(row.names(model$beta), {{mod_cat}}, negate = FALSE)
+      names <- row.names(model$beta)[pos]
+      name_cat <- as.character(stringr::str_replace(names, {{mod_cat}}, ""))
+      
+      X <- as.data.frame(model$X)[,names]
+      
+      moderator <- matrix(ncol = 1, nrow = dim(X)[1])
+      
+      for(i in 1:ncol(X)){
+        moderator <- ifelse(X[,i] == 1, name_cat[i], moderator)
+      }
+      moderator <- firstup(moderator)
+      yi <- model$yi
+      vi <- model$vi
+      type <- attr(model$yi, "measure")
+      
+      data <- data.frame(yi, vi, moderator, type)
+      return(data)
+      
+    }
+    
+    mod_results_new <- function(model, mod_cat, mod_cont, type = c("mean", "zero")) { 
+      
+      type = match.arg(type)
+      
+      if(all(class(model) %in% c("rma.mv", "rma")) == FALSE) {stop("Sorry, you need to fit a metafor model of class rma.mv or rma")}
+      
+      data <- get_data_cont(model, mod_cat)
+      
+      if(length(mod_cont) == 0){
+        # Get confidence intervals
+        CI <- get_est(model, mod_cat)
+        
+        # Get prediction intervals
+        PI <- get_pred(model, mod_cat)
+        
+        model_results <- list(mod_table = cbind(CI, PI[,-1]), data = data)
+      }
+      
+      if(length(mod_cont) >= 1){
+        ests <- get_pred_est_cont(model, mod_cat, mod_cont, type)
+        model_results <- list(mod_table = ests, data = data)	
+      }
+      
+      class(model_results) <- "orchard"
+      
+      return(model_results)
+      
+    }
+    
+    
 # Convert proportions to a logit scale making them normally distributed, which should better satisfy assumptions of SMD and lnCVR
-convert_propor <- function(male_mean, male_sd, female_mean, female_sd){
+convert_propor <- function(study_ID, obs, male_mean, male_sd, female_mean, female_sd){
     logit_mean_male <- gtools::logit(male_mean) + (male_sd^2 / 2)*((1 / (1-male_mean)^2) - (1 / male_mean^2))
      
       sd_logit_male  <- sqrt(male_sd^2* (((1 / male_mean) + (1 / (1-male_mean)))^2))
@@ -321,16 +442,18 @@ convert_propor <- function(male_mean, male_sd, female_mean, female_sd){
       
       sd_logit_female  <- sqrt(female_sd^2* (((1 / female_mean) + (1 / (1-female_mean)))^2))
 
-    return(cbind(male_mean_conv = logit_mean_male, male_sd_conv = sd_logit_male, female_mean_conv = logit_mean_female, female_sd_conv = sd_logit_female))
+    return(data.frame(study_ID = study_ID, obs = obs, male_mean_conv = logit_mean_male, male_sd_conv = sd_logit_male, female_mean_conv = logit_mean_female, female_sd_conv = sd_logit_female))
 }
 
 ## Just a quick check to see things are sensible
-# prop = c(0.20, 0.5, 0.6)
-# sd = c(0.10, 0.2, 0.4)
+# propmale = c(0.20, 0.5, 0.6)
+# sdmale = c(0.10, 0.2, 0.4)
+# propfemale = c(0.30, 0.6, 0.2)
+# sdfemale = c(0.2, 0.2, 0.4)
 # convert_propor(prop, sd)
 
 # Convert latency data to a log normal distributed which should normalize and better satisfy assumptions of SMD and lnCVR
-convert_latency <- function(male_mean, male_sd, female_mean, female_sd, method = c("delta", "analyt")){
+convert_latency <- function(study_ID, row_ID, male_mean, male_sd, female_mean, female_sd, method = c("delta", "analyt")){
 
   if(method == "delta"){
          lnMean <- log(mean) - (sd^2 / (2*mean^2))
@@ -344,7 +467,7 @@ convert_latency <- function(male_mean, male_sd, female_mean, female_sd, method =
       sd_lnMean_female <- sqrt(log(1 + (female_sd^2 / female_mean^2)))
   }
 
-  return(cbind(male_mean_conv = lnMean_male, male_sd_conv = sd_lnMean_male, female_mean_conv = lnMean_female, female_sd_conv = sd_lnMean_female))
+  return(data.frame(study_ID = study_ID, row_ID = row_ID, male_mean_conv = lnMean_male, male_sd_conv = sd_lnMean_male, female_mean_conv = lnMean_female, female_sd_conv = sd_lnMean_female))
 }
 
 # Check that the latency calculation is correct as I have never applied conversions before
