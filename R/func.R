@@ -26,7 +26,7 @@ fit_MLMA_reg_models_personality_trait <- function(data, phylo_vcv){
 }
 
 fit_MLMA_reg_models_pubbias <- function(data, phylo_vcv){
-  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + sqrt_inv_n_tilda, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data)
+  lnCVR <- metafor::rma.mv(CVR_yi ~ -1 + personality_trait + sqrt_inv_n_tilda, V = CVR_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), control=list(optimizer="optim"), test = "t", data = data)
   
   SMD <- metafor::rma.mv(SMD_yi_flip ~ -1 + personality_trait + sqrt_inv_n_tilda, V = SMD_vi, random = list(~1|study_ID, ~1|spp_name_phylo, ~1|obs), R = list(spp_name_phylo=phylo_vcv), test = "t", data = data) 
   

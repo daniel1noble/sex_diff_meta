@@ -1,8 +1,11 @@
 ---
-title: "Males are not the more variable sex when it comes to personality - Data Analysis and Meta-A Models"
+title: Males are not the more variable sex when it comes to personality - Data Analysis
+  and Meta-A Models
 author: "Lauren Harrison, Daniel Noble & Michael Jennions"
 date: "28/02/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
