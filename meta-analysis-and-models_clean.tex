@@ -24,7 +24,7 @@
 \PassOptionsToPackage{hyphens}{url} % url is loaded by hyperref
 \usepackage[unicode=true]{hyperref}
 \hypersetup{
-            pdftitle={A meta-analysis of sex differences in animal personality: no evidence for greater male variability - Data checks, analysis and meta-a models},
+            pdftitle={A meta-analysis of sex differences in animal personality: no evidence for greater male variability},
             pdfauthor={Lauren Harrison, Daniel Noble \& Michael Jennions},
             pdfborder={0 0 0},
             breaklinks=true}
@@ -119,9 +119,9 @@
 \usepackage{makecell}
 
 \title{A meta-analysis of sex differences in animal personality: no evidence
-for greater male variability - Data checks, analysis and meta-a models}
+for greater male variability}
 \author{Lauren Harrison, Daniel Noble \& Michael Jennions}
-\date{01/03/2020 last updated: 26/06/2021}
+\date{last updated: 16/09/2021}
 
 \begin{document}
 \maketitle
@@ -130,6 +130,9 @@ for greater male variability - Data checks, analysis and meta-a models}
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
+\section{Supplementary Material - Data checks, analysis and meta-a
+models}\label{supplementary-material---data-checks-analysis-and-meta-a-models}
+
 \section{Data Set-up}\label{data-set-up}
 
 \subsection{Load packages}\label{load-packages}
@@ -141,7 +144,15 @@ for greater male variability - Data checks, analysis and meta-a models}
 
 \CommentTok{# Install CRAN packages}
   \KeywordTok{library}\NormalTok{(}\StringTok{"pacman"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
+\begin{verbatim}
+## Warning: package 'pacman' was built under R version 3.5.2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{# Install orchard plot and metaAidR packages from GitHub}
 \NormalTok{  devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"itchyshin/orchard_plot"}\NormalTok{, }\DataTypeTok{subdir =} \StringTok{"orchaRd"}\NormalTok{, }\DataTypeTok{force =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{build_vignettes =} \OtherTok{TRUE}\NormalTok{); }
 \end{Highlighting}
@@ -149,73 +160,15 @@ for greater male variability - Data checks, analysis and meta-a models}
 
 \begin{verbatim}
 ## Error in get(genname, envir = envir) : object 'testthat_print' not found
-## R6           (2.5.0    -> 2.5.1) [CRAN]
-## utf8         (1.2.1    -> 1.2.2) [CRAN]
-## cli          (3.0.0    -> 3.0.1) [CRAN]
-## pillar       (1.6.1    -> 1.6.2) [CRAN]
-## tibble       (3.1.2    -> 3.1.4) [CRAN]
-## stringi      (1.6.2    -> 1.7.4) [CRAN]
-## openssl      (1.4.4    -> 1.4.5) [CRAN]
-## fastmap      (1.0.1    -> 1.1.0) [CRAN]
-## tinytex      (0.32     -> 0.33 ) [CRAN]
-## htmltools    (0.5.1.1  -> 0.5.2) [CRAN]
-## xfun         (0.24     -> 0.26 ) [CRAN]
-## rmarkdown    (2.9      -> 2.11 ) [CRAN]
-## knitr        (1.33     -> 1.34 ) [CRAN]
-## Rcpp         (1.0.6    -> 1.0.7) [CRAN]
-## bit          (1.1-15.2 -> 4.0.4) [CRAN]
-## bit64        (0.9-7    -> 4.0.5) [CRAN]
-## tzdb         (NA       -> 0.1.2) [CRAN]
-## vroom        (1.2.0    -> 1.5.5) [CRAN]
-## broom        (0.7.8    -> 0.7.9) [CRAN]
-## readr        (1.4.0    -> 2.0.1) [CRAN]
-## isoband      (0.2.4    -> 0.2.5) [CRAN]
-## googledrive  (1.0.1    -> 2.0.0) [CRAN]
-## blob         (1.2.1    -> 1.2.2) [CRAN]
-## rvest        (1.0.0    -> 1.0.1) [CRAN]
-## reprex       (2.0.0    -> 2.0.1) [CRAN]
-## haven        (2.4.1    -> 2.4.3) [CRAN]
-## googleshe... (0.3.0    -> 1.0.0) [CRAN]
-## 
-##   There are binary versions available but the source versions are later:
-##                 binary source needs_compilation
-## R6               2.4.1  2.5.1             FALSE
-## utf8             1.1.4  1.2.2              TRUE
-## cli              2.0.2  3.0.1              TRUE
-## pillar           1.4.3  1.6.2             FALSE
-## tibble           2.1.3  3.1.4              TRUE
-## stringi          1.4.6  1.7.4              TRUE
-## openssl          1.4.1  1.4.5              TRUE
-## fastmap          1.0.1  1.1.0              TRUE
-## tinytex           0.20   0.33             FALSE
-## htmltools        0.4.0  0.5.2              TRUE
-## xfun              0.12   0.26              TRUE
-## rmarkdown          2.1   2.11             FALSE
-## knitr             1.28   1.34             FALSE
-## Rcpp             1.0.4  1.0.7              TRUE
-## bit           1.1-15.2  4.0.4              TRUE
-## bit64            0.9-7  4.0.5              TRUE
-## vroom            1.2.0  1.5.5              TRUE
-## broom            0.5.5  0.7.9             FALSE
-## readr            1.3.1  2.0.1              TRUE
-## isoband          0.2.0  0.2.5              TRUE
-## googledrive      1.0.0  2.0.0             FALSE
-## blob             1.2.1  1.2.2             FALSE
-## rvest            0.3.5  1.0.1             FALSE
-## reprex           0.3.0  2.0.1             FALSE
-## haven            2.2.0  2.4.3              TRUE
-## googlesheets4    0.1.1  1.0.0             FALSE
 ## 
 ##   
-   checking for file ‘/private/var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T/RtmpnOccZB/remotes31ac7b962c89/itchyshin-orchard_plot-27d6281/orchaRd/DESCRIPTION’ ...
+   checking for file ‘/private/var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T/RtmpyX6Pi3/remotescf00568b00af/itchyshin-orchard_plot-27d6281/orchaRd/DESCRIPTION’ ...
   
-v  checking for file ‘/private/var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T/RtmpnOccZB/remotes31ac7b962c89/itchyshin-orchard_plot-27d6281/orchaRd/DESCRIPTION’
+v  checking for file ‘/private/var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T/RtmpyX6Pi3/remotescf00568b00af/itchyshin-orchard_plot-27d6281/orchaRd/DESCRIPTION’
 ## 
   
 -  preparing ‘orchaRd’:
-## 
-  
-   checking DESCRIPTION meta-information ...
+##    checking DESCRIPTION meta-information ...
   
 v  checking DESCRIPTION meta-information
 ## 
@@ -225,7 +178,7 @@ v  checking DESCRIPTION meta-information
   
    creating vignettes ...
   
-v  creating vignettes (1.4s)
+v  creating vignettes (1.6s)
 ## 
   
 -  checking for LF line-endings in source and make files and shell scripts
@@ -247,18 +200,7 @@ v  creating vignettes (1.4s)
 \NormalTok{  devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"daniel1noble/metaAidR"}\NormalTok{); }
 
 \NormalTok{pacman}\OperatorTok{::}\KeywordTok{p_load}\NormalTok{(knitr, metafor, dplyr, kableExtra, tidyverse, rotl, phytools, GGally, R.rsp, patchwork, devtools, robumeta, ape, geiger, phytools, phangorn, rlist, orchaRd, metaAidR, corrplot, stringr)}
-\end{Highlighting}
-\end{Shaded}
 
-\begin{verbatim}
-## 
-##   There is a binary version available but the source version is later:
-##       binary source needs_compilation
-## knitr   1.28   1.34             FALSE
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \CommentTok{# set working directory}
  \CommentTok{# setwd("~/Documents/GitHub/sex_meta/")}
   
@@ -495,6 +437,8 @@ that tells one if the meaning should be reversed (1) or left the same.
 \end{Highlighting}
 \end{Shaded}
 
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
 \section{Prepare the phylogenetic
 trees}\label{prepare-the-phylogenetic-trees}
 
@@ -560,7 +504,7 @@ meta-analytic models throughout the analysis.
 ## [1] 0
 ## 
 ## $`./trees/bird_species.nwk`$x.lim
-## [1]   0.0000 155.2437
+## [1]    0.000 1815.121
 ## 
 ## $`./trees/bird_species.nwk`$y.lim
 ## [1]   1 109
@@ -622,7 +566,7 @@ meta-analytic models throughout the analysis.
 ## [1] 0
 ## 
 ## $`./trees/fish_species.nwk`$x.lim
-## [1]   0.000 709.958
+## [1]     0.00 43420.45
 ## 
 ## $`./trees/fish_species.nwk`$y.lim
 ## [1]  1 22
@@ -684,7 +628,7 @@ meta-analytic models throughout the analysis.
 ## [1] 0
 ## 
 ## $`./trees/invert_species.nwk`$x.lim
-## [1]    0.0 1129.5
+## [1]    0.000 8835.685
 ## 
 ## $`./trees/invert_species.nwk`$y.lim
 ## [1]  1 42
@@ -746,7 +690,7 @@ meta-analytic models throughout the analysis.
 ## [1] 0
 ## 
 ## $`./trees/mammal_species.nwk`$x.lim
-## [1]   0.0000 237.8964
+## [1]    0.000 1785.101
 ## 
 ## $`./trees/mammal_species.nwk`$y.lim
 ## [1]  1 46
@@ -808,7 +752,7 @@ meta-analytic models throughout the analysis.
 ## [1] 0
 ## 
 ## $`./trees/reptile_species.nwk`$x.lim
-## [1]   0.0000 527.6377
+## [1]    0.000 2764.791
 ## 
 ## $`./trees/reptile_species.nwk`$y.lim
 ## [1]  1 10
@@ -906,6 +850,8 @@ Our score sensitivity model:
 \StringTok{                         }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{n =} \KeywordTok{n}\NormalTok{(), }\DataTypeTok{studies =} \KeywordTok{length}\NormalTok{(}\KeywordTok{unique}\NormalTok{(study_ID)), }\DataTypeTok{species =} \KeywordTok{length}\NormalTok{(}\KeywordTok{unique}\NormalTok{(spp_name_phylo))))}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{Meta-Analysis Models}\label{meta-analysis-models}
 
@@ -3884,7 +3830,7 @@ for more information about using ggtree
 \begin{verbatim}
 ## 
 ## The downloaded binary packages are in
-##  /var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T//RtmpnOccZB/downloaded_packages
+##  /var/folders/0b/pxghylq157gfhs1vrzdpx2gc0000gq/T//RtmpyX6Pi3/downloaded_packages
 \end{verbatim}
 
 \begin{Shaded}
@@ -3976,12 +3922,16 @@ for more information about using ggtree
 \begin{verbatim}
 ## Warning: `data_frame()` was deprecated in tibble 1.1.0.
 ## Please use `tibble()` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
 \end{verbatim}
 
 \begin{verbatim}
 ## Warning: `mutate_()` was deprecated in dplyr 0.7.0.
 ## Please use `mutate()` instead.
 ## See vignette('programming') for more help
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
 \end{verbatim}
 
 \begin{Shaded}
@@ -4033,7 +3983,7 @@ for more information about using ggtree
     \KeywordTok{row.names}\NormalTok{(mammal_data) <-}\StringTok{ }\NormalTok{mammal_data}\OperatorTok{$}\NormalTok{spp_name_phylo }
 
 \CommentTok{# set window}
-\CommentTok{# dev.new(width=8,height=4.5,noRStudioGD = TRUE)}
+\CommentTok{# dev.new(width=8,height=7,noRStudioGD = TRUE)}
 
 \CommentTok{# make a matrix of effect sizes (n) for each species for each personality trait to add to our plot!}
     \CommentTok{# subset dataset}
@@ -4066,10 +4016,6 @@ for more information about using ggtree
   \CommentTok{# matrix    }
 \NormalTok{    mammal_matrix <-}\StringTok{ }\KeywordTok{data.matrix}\NormalTok{(pers_mammal) }
     
-  \CommentTok{# size of new figures}
-\CommentTok{#dev.new(width=8,height=7,noRStudioGD = TRUE)  }
-  
-\CommentTok{# trying a new way to make the trees ## use this one}
   \CommentTok{# making the tree}
 \NormalTok{p_m1 <-}\StringTok{ }\KeywordTok{ggtree}\NormalTok{(pruned.mammaltree, }\DataTypeTok{size =} \FloatTok{0.3}\NormalTok{, }\DataTypeTok{layout =} \StringTok{'circular'}\NormalTok{, }\DataTypeTok{branch.length =} \StringTok{'none'}\NormalTok{) }\OperatorTok{%<+%}\StringTok{ }\NormalTok{mammal_data }\OperatorTok{+}\StringTok{ }
 \StringTok{  }\KeywordTok{geom_tippoint}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{color=}\NormalTok{SSD_index)) }\OperatorTok{+}\StringTok{ }
@@ -4091,7 +4037,7 @@ for more information about using ggtree
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{ggsave}\NormalTok{(}\StringTok{"./figs/finished figs/mammalphylo.tiff"}\NormalTok{, p_m2, }\DataTypeTok{width=}\DecValTok{8}\NormalTok{, }\DataTypeTok{height =} \DecValTok{7}\NormalTok{, }\DataTypeTok{units =} \StringTok{"in"}\NormalTok{)}
+\CommentTok{# ggsave("./figs/finished figs/mammalphylo.tiff", p_m2, width=8, height = 7, units = "in")}
 \end{Highlighting}
 \end{Shaded}
 
@@ -4123,7 +4069,7 @@ for more information about using ggtree
 \NormalTok{    rep_data}\OperatorTok{$}\NormalTok{spp_name_phylo =}\StringTok{ }\KeywordTok{gsub}\NormalTok{(}\StringTok{"_"}\NormalTok{, }\StringTok{" "}\NormalTok{, rep_data}\OperatorTok{$}\NormalTok{spp_name_phylo)}
 
 \CommentTok{# set window size}
-\CommentTok{#dev.new(width=7,height=6,noRStudioGD = TRUE)}
+\CommentTok{#dev.new(width=7,height=5,noRStudioGD = TRUE)}
 
  \CommentTok{# tree structure }
 \NormalTok{p3 <-}\StringTok{ }\KeywordTok{ggtree}\NormalTok{(pruned.reptree, }\DataTypeTok{branch.length=}\StringTok{'none'}\NormalTok{, }\DataTypeTok{size =} \FloatTok{0.3}\NormalTok{, }\DataTypeTok{layout=}\StringTok{'circular'}\NormalTok{) }\OperatorTok{%<+%}\StringTok{ }\NormalTok{rep_data }\OperatorTok{+}\StringTok{ }
@@ -4177,8 +4123,6 @@ for more information about using ggtree
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{#dev.new(width=7,height=5,noRStudioGD = TRUE)}
-
 \CommentTok{# ggsave("./figs/finished figs/repphylo.tiff", rep_plot, width=7, height = 5, units = "in")}
 \end{Highlighting}
 \end{Shaded}
@@ -4192,7 +4136,7 @@ for more information about using ggtree
 \StringTok{    }\KeywordTok{filter}\NormalTok{(taxo_group }\OperatorTok{==}\StringTok{ "fish"}\NormalTok{))}
  
  \CommentTok{# window size}
- \CommentTok{#dev.new(width=7,height=6,noRStudioGD = TRUE)}
+ \CommentTok{#dev.new(width=8,height=6,noRStudioGD = TRUE)}
  
 \CommentTok{# setting up the basic tree structure}
  
@@ -4297,6 +4241,8 @@ for more information about using ggtree
 
 \CommentTok{# set rownames for labelling tips}
   \KeywordTok{rownames}\NormalTok{(invert_data) <-}\StringTok{ }\NormalTok{pruned.inverttree}\OperatorTok{$}\NormalTok{tip.label}
+  
+\CommentTok{# dev.new(width=8,height=6,noRStudioGD = TRUE) }
 
  \CommentTok{# tree structure (cladogram, circular)}
 \NormalTok{  p5 <-}\StringTok{ }\KeywordTok{ggtree}\NormalTok{(pruned.inverttree, }\DataTypeTok{branch.length=}\StringTok{'none'}\NormalTok{, }\DataTypeTok{layout=}\StringTok{'circular'}\NormalTok{) }\OperatorTok{%<+%}\StringTok{ }\NormalTok{invert_data }\OperatorTok{+}\StringTok{ }
@@ -4343,8 +4289,6 @@ for more information about using ggtree
          \DataTypeTok{colnames_angle=}\DecValTok{45}\NormalTok{, }\DataTypeTok{colnames_offset_y =} \DecValTok{0}\NormalTok{, }
          \DataTypeTok{hjust=}\DecValTok{0}\NormalTok{, }\DataTypeTok{font.size=}\FloatTok{2.5}\NormalTok{)}
 
-\CommentTok{#dev.new(width=8,height=6,noRStudioGD = TRUE)     }
-
 \NormalTok{invertplot     }
 \end{Highlighting}
 \end{Shaded}
@@ -4362,12 +4306,6 @@ These plots were edited together outside of R with the addition of
 creative commons animal silhouettes from PhyloPic to create Figures 2-6.
 Figure 1, the PRISMA diagram, was created using sankeymatic.com
 
-\section{Done!}\label{done}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{#print(session_info(include_base = FALSE))}
-\end{Highlighting}
-\end{Shaded}
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \end{document}
